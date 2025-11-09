@@ -4,7 +4,7 @@
 - Ivan Gonzales – Group Leader / Backend Developer  
 - Jesmumd Libar – Frontend  Developer  
 - Mayeoh Barangot – Backend/ Documentation
-- Clarice Pabillaran - Frontend Developer
+- Clarice Faye Pabillaran - Frontend Developer
 ---
 
 ### Milestone 1 (Nov Week 1): Project Setup & API Design
