@@ -1,6 +1,8 @@
 ## Project Milestones (AyudaBesh)
 
 ## Team Members
+- Ivan Gonzales – Group Leader / Backend Developer  
+- Jesmumd Krister M. Libar – Frontend  Developer  
 - [Ivan Gonzales](https://github.com/IvanGonzal-es) – Group Leader / Backend Developer  
 - [Jesmund Libar](https://github.com/jesmundlibar) – Frontend  Developer  
 - Mayeoh Barangot – Backend/ Documentation
