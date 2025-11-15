@@ -1,10 +1,10 @@
 ## Project Milestones (AyudaBesh)
 
 ## Team Members
-- Ivan Gonzales – Group Leader / Backend Developer  
-- Jesmumd Libar – Frontend  Developer  
+- [Ivan Gonzales](https://github.com/IvanGonzal-es) – Group Leader / Backend Developer  
+- [Jesmund Libar](https://github.com/jesmundlibar) – Frontend  Developer  
 - Mayeoh Barangot – Backend/ Documentation
-- Clarice Pabillaran - Frontend Developer
+- [Clarice Pabillaran](https://github.com/Clarice-Pabillaran) - Frontend Developer
 ---
 
 ### Milestone 1 (Nov Week 1): Project Setup & API Design
