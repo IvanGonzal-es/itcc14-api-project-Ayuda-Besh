@@ -16,10 +16,10 @@ README.md updated with Problem Statement, Project Description, and Basic Data Mo
 Create and commit **api.yaml** with planned endpoints.  
 
 - **Checklists:**  
-  - [ ] Hold team meeting to finalize project topic  
-  - [ ] Define database models for Users, Requests, and Responses  
-  - [ ] Create initial api.yaml file with planned endpoints  
-  - [ ] Set up Flask project structure and connect to MongoDB  
+  - [x] Hold team meeting to finalize project topic  
+  - [x] Define database models for Users, Requests, and Responses  
+  - [x] Create initial api.yaml file with planned endpoints  
+  - [x] Set up Flask project structure and connect to MongoDB  
   - [ ] Commit all changes and push to GitHub  
 
 ---
@@ -32,8 +32,8 @@ Build basic CRUD endpoints for Users and Requests and test them with Postman.
 Functional endpoints for Users and Requests  
 
 - **Checklists:**  
-  - [ ] Implement User endpoints: create, read, update, delete  
-  - [ ] Implement Request endpoints: create, read, update, delete  
+  - [x] Implement User endpoints: create, read, update, delete  
+  - [x] Implement Request endpoints: create, read, update, delete  
   - [ ] Test endpoints with Postman  
   - [ ] Commit & push changes  
 
@@ -47,8 +47,8 @@ Add simple authentication and basic search/filter for Requests.
 Login system and search/filter functionality implemented  
 
 - **Checklists:**  
-  - [ ] Implement login with username/password 
-  - [ ] Add search/filter functionality for Requests by type or status  
+  - [x] Implement login with username/password 
+  - [x] Add search/filter functionality for Requests by type or status  
   - [ ] Test new features with Postman 
   - [ ] Commit & push changes  
 
