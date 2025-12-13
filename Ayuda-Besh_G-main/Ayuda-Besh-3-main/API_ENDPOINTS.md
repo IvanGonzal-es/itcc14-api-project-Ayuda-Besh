@@ -247,8 +247,4 @@
 
 ---
 
-## Testing
 
-For detailed testing instructions, see:
-- `TESTING_GUIDE.md` - Complete testing guide
-- `AyudaBesh_API.postman_collection.json` - Postman collection file
