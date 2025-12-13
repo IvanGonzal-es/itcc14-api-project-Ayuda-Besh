@@ -1,0 +1,383 @@
+<!-- templates/provider/availability.html -->
+{% extends "base.html" %}
+
+{% block title %}Availability Calendar - AyudaBesh{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer_dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="customer-dashboard">
+    <div class="dashboard-header">
+        <h1>📅 Availability Calendar</h1>
+        <button class="btn btn-outline" onclick="window.location.href='/provider/dashboard'">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Weekly Schedule Editor -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Weekly Schedule</h2>
+        </div>
+        <p style="color: #6c757d; margin-bottom: 25px; line-height: 1.6;">Set your regular working hours for each day of the week. Customers will see your availability when booking.</p>
+        
+        <div id="weeklySchedule" style="display: grid; gap: 15px;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <button onclick="saveWeeklySchedule()" class="btn btn-primary" style="margin-top: 25px;">
+            💾 Save Weekly Schedule
+        </button>
+    </div>
+
+    <!-- Calendar View -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Calendar View</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="previousMonth()" class="btn btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                    ← Previous
+                </button>
+                <span id="currentMonthYear" style="font-weight: 600; font-size: 1.1rem; color: #212529; min-width: 200px; text-align: center;"></span>
+                <button onclick="nextMonth()" class="btn btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                    Next →
+                </button>
+            </div>
+        </div>
+        
+        <div id="calendarView" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 20px;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Specific Dates Override -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Mark Specific Dates</h2>
+        </div>
+        <p style="color: #6c757d; margin-bottom: 25px; line-height: 1.6;">Override your regular schedule for specific dates (e.g., holidays, special hours, time off).</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="specificDate">Date</label>
+                <input type="date" id="specificDate">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="specificStartTime">Start Time</label>
+                <input type="time" id="specificStartTime">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="specificEndTime">End Time</label>
+                <input type="time" id="specificEndTime">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="specificAvailable">Status</label>
+                <select id="specificAvailable">
+                    <option value="true">Available</option>
+                    <option value="false">Unavailable</option>
+                </select>
+            </div>
+        </div>
+        
+        <button onclick="addSpecificDate()" class="btn btn-primary">
+            ➕ Add Date Override
+        </button>
+        
+        <div id="specificDatesList" style="margin-top: 25px;">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMonth = new Date().getMonth() + 1;
+let currentYear = new Date().getFullYear();
+let availabilityData = null;
+let specificDates = [];
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const daysLower = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+async function loadAvailability() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch('/api/availability', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            availabilityData = await response.json();
+            renderWeeklySchedule();
+            loadCalendar();
+            loadSpecificDates();
+        } else {
+            console.error('Failed to load availability');
+        }
+    } catch (error) {
+        console.error('Error loading availability:', error);
+    }
+}
+
+function renderWeeklySchedule() {
+    const schedule = availabilityData?.schedule || {};
+    const container = document.getElementById('weeklySchedule');
+    
+    let html = '';
+    days.forEach((day, index) => {
+        const dayLower = daysLower[index];
+        const daySchedule = schedule[dayLower] || { available: true, start: '09:00', end: '18:00', breaks: [] };
+        
+        html += `
+            <div style="display: grid; grid-template-columns: 150px 1fr auto; gap: 15px; align-items: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid #e9ecef; transition: all 0.2s ease;" 
+                 onmouseover="this.style.borderColor='#0070f3'; this.style.background='#f0f7ff'" 
+                 onmouseout="this.style.borderColor='#e9ecef'; this.style.background='#f8f9fa'">
+                <div>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: #212529;">
+                        <input type="checkbox" id="available_${dayLower}" ${daySchedule.available ? 'checked' : ''} 
+                               onchange="toggleDay('${dayLower}')" style="width: 20px; height: 20px; cursor: pointer;">
+                        ${day}
+                    </label>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;" id="times_${dayLower}">
+                    <input type="time" id="start_${dayLower}" value="${daySchedule.start || '09:00'}" 
+                           class="form-group input" style="padding: 10px; border: 2px solid #e9ecef; border-radius: 6px; font-size: 0.9rem;" ${!daySchedule.available ? 'disabled' : ''}>
+                    <span style="color: #6c757d; font-weight: 500;">to</span>
+                    <input type="time" id="end_${dayLower}" value="${daySchedule.end || '18:00'}" 
+                           class="form-group input" style="padding: 10px; border: 2px solid #e9ecef; border-radius: 6px; font-size: 0.9rem;" ${!daySchedule.available ? 'disabled' : ''}>
+                </div>
+                <div style="color: ${daySchedule.available ? '#28a745' : '#dc3545'}; font-weight: 600; font-size: 0.9rem;">
+                    ${daySchedule.available ? '✓ Available' : '✗ Unavailable'}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function toggleDay(day) {
+    const checkbox = document.getElementById(`available_${day}`);
+    const startInput = document.getElementById(`start_${day}`);
+    const endInput = document.getElementById(`end_${day}`);
+    
+    startInput.disabled = !checkbox.checked;
+    endInput.disabled = !checkbox.checked;
+}
+
+async function saveWeeklySchedule() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    const schedule = {};
+    daysLower.forEach(day => {
+        const available = document.getElementById(`available_${day}`).checked;
+        schedule[day] = {
+            available: available,
+            start: document.getElementById(`start_${day}`).value || '09:00',
+            end: document.getElementById(`end_${day}`).value || '18:00',
+            breaks: []
+        };
+    });
+    
+    try {
+        const response = await fetch('/api/availability', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                schedule: schedule,
+                specific_dates: specificDates,
+                timezone: 'Asia/Manila'
+            })
+        });
+        
+        if (response.ok) {
+            alert('✅ Weekly schedule saved successfully!');
+            loadAvailability();
+        } else {
+            const error = await response.json();
+            alert('❌ Error: ' + (error.error || 'Failed to save schedule'));
+        }
+    } catch (error) {
+        alert('Network error. Please try again.');
+    }
+}
+
+async function loadCalendar() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch(`/api/availability/calendar?month=${currentMonth}&year=${currentYear}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            renderCalendar(data);
+        }
+    } catch (error) {
+        console.error('Error loading calendar:', error);
+    }
+}
+
+function renderCalendar(data) {
+    document.getElementById('currentMonthYear').textContent = 
+        new Date(currentYear, currentMonth - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    const container = document.getElementById('calendarView');
+    
+    // Day headers
+    let html = '';
+    days.forEach(day => {
+        html += `<div style="text-align: center; font-weight: 600; padding: 12px; background: #f8f9fa; border-radius: 6px; color: #495057; font-size: 0.9rem;">${day.substring(0, 3)}</div>`;
+    });
+    
+    // Calendar days
+    if (data && data.calendar) {
+    data.calendar.forEach(day => {
+        const date = new Date(day.date);
+        const isToday = date.toDateString() === new Date().toDateString();
+        const bgColor = day.available ? '#d4edda' : '#f8d7da';
+            const borderColor = isToday ? '#0070f3' : '#e9ecef';
+            const textColor = day.available ? '#155724' : '#721c24';
+        
+        html += `
+            <div style="
+                border: 2px solid ${borderColor};
+                background: ${bgColor};
+                    padding: 12px;
+                    border-radius: 8px;
+                    min-height: 90px;
+                cursor: pointer;
+                    transition: all 0.2s ease;
+                " onclick="viewDayDetails('${day.date}')" 
+                   onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" 
+                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                    <div style="font-weight: 700; margin-bottom: 8px; color: #212529; font-size: 1.1rem;">${date.getDate()}</div>
+                    <div style="font-size: 0.85rem; color: ${textColor}; font-weight: 500; margin-bottom: 4px;">
+                    ${day.available ? '✓ Available' : '✗ Unavailable'}
+                </div>
+                ${day.bookings_count > 0 ? 
+                        `<div style="font-size: 0.75rem; color: #0070f3; margin-top: 6px; font-weight: 600;">${day.bookings_count} booking(s)</div>` : ''}
+            </div>
+        `;
+    });
+    } else {
+        // Fallback if calendar data not available
+        html += '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">Calendar data not available</div>';
+    }
+    
+    container.innerHTML = html;
+}
+
+function previousMonth() {
+    currentMonth--;
+    if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+    }
+    loadCalendar();
+}
+
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+    }
+    loadCalendar();
+}
+
+function loadSpecificDates() {
+    specificDates = availabilityData?.specific_dates || [];
+    renderSpecificDates();
+}
+
+function renderSpecificDates() {
+    const container = document.getElementById('specificDatesList');
+    
+    if (specificDates.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px;">No specific date overrides set.</p>';
+        return;
+    }
+    
+    let html = '<div style="display: grid; gap: 15px;">';
+    specificDates.forEach((dateEntry, index) => {
+        const date = new Date(dateEntry.date);
+        const formattedDate = date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        html += `
+            <div class="booking-card-detailed">
+                <div class="booking-header-detailed">
+                    <div style="flex-grow: 1;">
+                        <h4 style="margin: 0 0 8px 0; color: #212529; font-size: 1.1rem; font-weight: 600;">${formattedDate}</h4>
+                        <span class="status-badge" style="background: ${dateEntry.available ? '#d4edda' : '#f8d7da'}; color: ${dateEntry.available ? '#155724' : '#721c24'};">
+                            ${dateEntry.available ? '✓ Available' : '✗ Unavailable'}
+                    </span>
+                    ${dateEntry.start && dateEntry.end ? 
+                            `<span style="margin-left: 12px; color: #6c757d; font-size: 0.9rem;">${dateEntry.start} - ${dateEntry.end}</span>` : ''}
+                    </div>
+                    <button onclick="removeSpecificDate(${index})" class="btn btn-outline" style="background: #dc3545; color: white; border-color: #dc3545;">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function addSpecificDate() {
+    const date = document.getElementById('specificDate').value;
+    const startTime = document.getElementById('specificStartTime').value;
+    const endTime = document.getElementById('specificEndTime').value;
+    const available = document.getElementById('specificAvailable').value === 'true';
+    
+    if (!date) {
+        alert('Please select a date');
+        return;
+    }
+    
+    const dateEntry = {
+        date: date,
+        available: available,
+        start: startTime || '09:00',
+        end: endTime || '18:00',
+        reason: available ? null : 'Marked as unavailable'
+    };
+    
+    specificDates.push(dateEntry);
+    renderSpecificDates();
+    
+    // Save immediately
+    saveWeeklySchedule();
+}
+
+function removeSpecificDate(index) {
+    specificDates.splice(index, 1);
+    renderSpecificDates();
+    saveWeeklySchedule();
+}
+
+function viewDayDetails(date) {
+    // Could open a modal with day details
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadAvailability();
+});
+</script>
+{% endblock %}
