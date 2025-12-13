@@ -1,0 +1,369 @@
+<!-- templates/provider/manage_services.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Services - AyudaBesh{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer_dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="customer-dashboard">
+    <div class="dashboard-header">
+        <h1>Manage Your Services</h1>
+        <button class="btn btn-outline" onclick="window.location.href='/provider/dashboard'">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Service Management Form -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Service Profile Settings</h2>
+        </div>
+        
+        <div class="form-group">
+            <label>Service Categories <span style="color: #dc3545;">*</span> (Select all that apply)</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="cleaning" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Domestic Cleaning</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="plumbing" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Plumbing</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="electrical" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Electrical Work</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="pest_control" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Pest Control</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="appliance" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Appliance Installation</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="maintenance" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>General Maintenance</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s; margin: 0;" 
+                       onmouseover="this.style.background='rgba(0,112,243,0.1)'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="services" value="online_services" style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;"> 
+                    <span>Online Services</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="hourlyRate">Hourly Rate (₱) <span style="color: #dc3545;">*</span></label>
+            <input type="number" id="hourlyRate" value="500" min="100" max="5000" required>
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">Set your hourly rate for services</small>
+        </div>
+
+        <div class="form-group">
+            <label for="serviceRadius">Service Radius (km) <span style="color: #dc3545;">*</span></label>
+            <input type="number" id="serviceRadius" value="10" min="1" max="100" 
+                   placeholder="How far will you travel for jobs?" required>
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">Customers beyond this radius will see a warning</small>
+        </div>
+
+        <div class="form-group">
+            <label for="serviceAreas">Service Location/Areas <span style="color: #dc3545;">*</span></label>
+            <input type="text" id="serviceAreas" value="Manila, Quezon City" 
+                   placeholder="Enter cities or areas you serve (e.g., Manila, Makati, Pasig)" required>
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">List the areas where you provide services</small>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Service Description <span style="color: #dc3545;">*</span></label>
+            <textarea id="description" rows="5" 
+                      placeholder="Describe your services, experience, specialties, and what makes you unique. This helps customers choose you!"></textarea>
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">A detailed description helps attract more customers</small>
+        </div>
+
+        <div class="form-group">
+            <label for="equipment">Equipment & Tools</label>
+            <textarea id="equipment" rows="3"
+                      placeholder="List the equipment, tools, or vehicles you use for your services..."></textarea>
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">This helps customers understand your capabilities</small>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Certificates (Optional but recommended)</label>
+            <input type="file" id="certificates" multiple accept=".pdf,.jpg,.png,.jpeg" 
+                   style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; background: #f8f9fa; cursor: pointer; transition: all 0.3s ease;"
+                   onchange="handleFileUpload(event)"
+                   onmouseover="this.style.borderColor='#0070f3'" onmouseout="this.style.borderColor='#e9ecef'">
+            <small style="display: block; margin-top: 6px; color: #6c757d; font-size: 0.85rem;">Upload licenses, certifications, insurance documents, or ID (Max 10MB each)</small>
+            <div id="uploadedFiles" style="margin-top: 12px; display: none;"></div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 30px;">
+            <button onclick="window.location.href='/provider/dashboard'" class="btn btn-outline" style="flex: 1;">
+                Cancel
+            </button>
+            <button onclick="saveServices()" class="btn btn-primary" style="flex: 2;">
+                💾 Save Changes
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Services Display -->
+    <div class="content-section">
+        <h2 style="margin: 0 0 20px 0; font-size: 1.5rem; font-weight: 700; color: #212529;">Currently Offered Services</h2>
+        <div id="currentServices">
+            <p style="text-align: center; color: #6c757d; padding: 40px;">Loading your current services...</p>
+        </div>
+    </div>
+
+    <!-- Profile Completion -->
+    <div class="content-section" id="completionCard" style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #28a745;">
+        <h3 style="margin: 0 0 12px 0; color: #155724; font-size: 1.25rem; font-weight: 600;">
+            ✅ Profile Completion: <span id="completionPercentage">0</span>%
+        </h3>
+        <div style="background: rgba(255,255,255,0.7); padding: 12px; border-radius: 6px; margin-top: 12px;">
+            <div style="background: #fff; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                <div id="completionBar" style="background: linear-gradient(90deg, #28a745, #4caf50); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; color: #155724; line-height: 1.6;">Complete your profile to appear in more search results and attract more customers!</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load current provider profile
+async function loadProviderProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) return;
+        
+        // Check the services
+        if (user.services_offered) {
+            user.services_offered.forEach(service => {
+                const checkbox = document.querySelector(`input[name="services"][value="${service}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        if (user.hourly_rate) {
+            document.getElementById('hourlyRate').value = user.hourly_rate;
+        }
+        
+        if (user.service_radius) {
+            document.getElementById('serviceRadius').value = user.service_radius;
+        }
+        
+        if (user.location) {
+            document.getElementById('serviceAreas').value = user.location;
+        }
+        
+        if (user.description) {
+            document.getElementById('description').value = user.description;
+        }
+        
+        if (user.equipment) {
+            document.getElementById('equipment').value = user.equipment;
+        }
+        
+        // Display current services
+        displayCurrentServices(user.services_offered || []);
+        updateProfileCompletion();
+        
+    } catch (error) {
+        console.error('Error loading provider profile:', error);
+    }
+}
+
+function displayCurrentServices(services) {
+    if (services.length === 0) {
+        document.getElementById('currentServices').innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <p style="font-size: 1.1rem; margin: 0;">No services selected yet.</p>
+                <p style="margin: 10px 0 0 0;">Select services above to get started!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const serviceNames = {
+        'cleaning': 'Domestic Cleaning',
+        'plumbing': 'Plumbing',
+        'electrical': 'Electrical Work',
+        'pest_control': 'Pest Control',
+        'appliance': 'Appliance Installation',
+        'maintenance': 'General Maintenance',
+        'online_services': 'Online Services'
+    };
+    
+    let html = '<div style="display: flex; flex-wrap: wrap; gap: 12px;">';
+    services.forEach(service => {
+        html += `<span style="background: linear-gradient(135deg, #0070f3 0%, #0051cc 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; box-shadow: 0 2px 8px rgba(0,112,243,0.2);">${serviceNames[service] || service}</span>`;
+    });
+    html += '</div>';
+    document.getElementById('currentServices').innerHTML = html;
+}
+
+// Handle file uploads (preview only - actual upload would be server-side)
+function handleFileUpload(event) {
+    const files = event.target.files;
+    const uploadedDiv = document.getElementById('uploadedFiles');
+    
+    if (files.length > 0) {
+        uploadedDiv.style.display = 'block';
+        let fileHtml = '<div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;"><p style="margin: 0 0 8px 0; font-weight: 600; color: #212529;">Selected files:</p><ul style="margin: 0; padding-left: 20px; color: #495057;">';
+        for (let i = 0; i < files.length; i++) {
+            const fileSize = (files[i].size / 1024 / 1024).toFixed(2);
+            fileHtml += `<li style="margin-bottom: 4px;">${files[i].name} <span style="color: #6c757d;">(${fileSize} MB)</span></li>`;
+        }
+        fileHtml += '</ul></div>';
+        uploadedDiv.innerHTML = fileHtml;
+    } else {
+        uploadedDiv.style.display = 'none';
+    }
+}
+
+async function saveServices() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Please log in first');
+        return;
+    }
+    
+    // Get selected services
+    const selectedServices = [];
+    document.querySelectorAll('input[name="services"]:checked').forEach(checkbox => {
+        selectedServices.push(checkbox.value);
+    });
+    
+    if (selectedServices.length === 0) {
+        alert('Please select at least one service');
+        return;
+    }
+    
+    const hourlyRate = document.getElementById('hourlyRate').value;
+    const serviceRadius = document.getElementById('serviceRadius').value;
+    const serviceAreas = document.getElementById('serviceAreas').value;
+    const description = document.getElementById('description').value;
+    const equipment = document.getElementById('equipment').value;
+    
+    try {
+        // Send to actual API endpoint
+        const response = await fetch('/api/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                services: selectedServices,
+                hourly_rate: parseInt(hourlyRate),
+                service_radius: parseInt(serviceRadius),
+                location: serviceAreas,
+                description: description,
+                equipment: equipment
+                // In real app: include certificate upload logic
+            })
+        });
+        
+        const result = await response.json();
+        if (response.ok) {
+            // Update user in localStorage
+            const user = JSON.parse(localStorage.getItem('user'));
+            user.services_offered = selectedServices;
+            user.hourly_rate = parseInt(hourlyRate);
+            user.service_radius = parseInt(serviceRadius);
+            user.location = serviceAreas;
+            user.description = description;
+            user.equipment = equipment;
+            if (result.user) {
+                Object.assign(user, result.user);
+            }
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            alert('✅ Services updated successfully!');
+            window.location.href = '/provider/dashboard';
+        } else {
+            alert('❌ Error: ' + (result.error || 'Failed to update services'));
+        }
+    } catch (error) {
+        console.error('Error saving services:', error);
+        alert('Network error. Please try again.');
+    }
+}
+
+// Calculate profile completion percentage
+function updateProfileCompletion() {
+    let score = 0;
+    const totalPoints = 6;
+    
+    // Services selected
+    const servicesChecked = document.querySelectorAll('input[name="services"]:checked').length;
+    if (servicesChecked > 0) score++;
+    
+    // Hourly rate set
+    const hourlyRate = document.getElementById('hourlyRate').value;
+    if (hourlyRate && parseInt(hourlyRate) >= 100) score++;
+    
+    // Service radius set
+    const serviceRadius = document.getElementById('serviceRadius').value;
+    if (serviceRadius && parseInt(serviceRadius) >= 1) score++;
+    
+    // Service areas filled
+    const serviceAreas = document.getElementById('serviceAreas').value;
+    if (serviceAreas && serviceAreas.trim().length > 5) score++;
+    
+    // Description filled
+    const description = document.getElementById('description').value;
+    if (description && description.trim().length > 20) score++;
+    
+    // Equipment filled
+    const equipment = document.getElementById('equipment').value;
+    if (equipment && equipment.trim().length > 10) score++;
+    
+    const percentage = Math.round((score / totalPoints) * 100);
+    document.getElementById('completionPercentage').textContent = percentage;
+    document.getElementById('completionBar').style.width = percentage + '%';
+    
+    // Update completion card styling
+    const completionCard = document.getElementById('completionCard');
+    if (percentage >= 80) {
+        completionCard.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
+        completionCard.style.borderLeftColor = '#28a745';
+    } else if (percentage >= 50) {
+        completionCard.style.background = 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)';
+        completionCard.style.borderLeftColor = '#ff9800';
+    } else {
+        completionCard.style.background = 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)';
+        completionCard.style.borderLeftColor = '#f44336';
+    }
+}
+
+// Initialize and add event listeners for real-time completion updates
+document.addEventListener('DOMContentLoaded', () => {
+    loadProviderProfile();
+    
+    // Update completion when any field changes
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', updateProfileCompletion);
+    });
+    
+    const checkboxes = document.querySelectorAll('input[name="services"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateProfileCompletion);
+    });
+});
+</script>
+{% endblock %}

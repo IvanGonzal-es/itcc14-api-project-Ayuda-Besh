@@ -1,0 +1,1382 @@
+{
+	"info": {
+		"_postman_id": "ayudabesh-api-collection",
+		"name": "AyudaBesh API",
+		"description": "Complete API collection for AyudaBesh service platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check if API is running and database is connected"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"token\", jsonData.token);",
+									"        pm.collectionVariables.set(\"user_id\", jsonData.user.id);",
+									"        pm.collectionVariables.set(\"user_role\", jsonData.user.role);",
+									"        console.log(\"Token saved: \" + jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testcustomer\",\n    \"password\": \"password123\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login with username, password, and role. Token is automatically saved to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Signup - Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"token\", jsonData.token);",
+									"        pm.collectionVariables.set(\"user_id\", jsonData.user.id);",
+									"        pm.collectionVariables.set(\"user_role\", jsonData.user.role);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testcustomer\",\n    \"email\": \"customer@test.com\",\n    \"password\": \"password123\",\n    \"fullName\": \"Test Customer\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "signup"]
+						},
+						"description": "Create a new customer account"
+					},
+					"response": []
+				},
+				{
+					"name": "Signup - Provider",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"provider_token\", jsonData.token);",
+									"        pm.collectionVariables.set(\"provider_id\", jsonData.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"testprovider\",\n    \"email\": \"provider@test.com\",\n    \"password\": \"password123\",\n    \"fullName\": \"Test Provider\",\n    \"role\": \"provider\",\n    \"services_offered\": [\"cleaning\", \"plumbing\"],\n    \"location\": \"Manila\",\n    \"description\": \"Professional service provider\",\n    \"hourly_rate\": 500,\n    \"service_radius\": 10,\n    \"equipment\": \"All necessary tools\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "signup"]
+						},
+						"description": "Create a new provider account. Provider will be pending verification."
+					},
+					"response": []
+				},
+				{
+					"name": "Signup - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"admin_token\", jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"email\": \"admin@test.com\",\n    \"password\": \"admin123\",\n    \"fullName\": \"Admin User\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "signup"]
+						},
+						"description": "Create a new admin account"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "Logout and clear token cookie"
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.reset_token) {",
+									"        pm.collectionVariables.set(\"reset_token\", jsonData.reset_token);",
+									"        console.log(\"Reset token saved: \" + jsonData.reset_token);",
+									"        console.log(\"Verification code: \" + jsonData.verification_code);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"identifier\": \"user@example.com\",\n    \"role\": \"customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "forgot-password"]
+						},
+						"description": "Request password reset. Sends verification code to email or phone. Returns code in response for testing (remove in production)."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reset_token\": \"{{reset_token}}\",\n    \"verification_code\": \"123456\",\n    \"new_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "reset-password"]
+						},
+						"description": "Reset password using verification code and reset token. Requires code from forgot-password response."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Services",
+			"item": [
+				{
+					"name": "Get All Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/services",
+							"host": ["{{base_url}}"],
+							"path": ["api", "services"]
+						},
+						"description": "Get all available service categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Providers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/providers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "providers"]
+						},
+						"description": "Get all verified providers"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Providers (Filtered)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/providers?service=cleaning&location=Manila",
+							"host": ["{{base_url}}"],
+							"path": ["api", "providers"],
+							"query": [
+								{
+									"key": "service",
+									"value": "cleaning"
+								},
+								{
+									"key": "location",
+									"value": "Manila"
+								}
+							]
+						},
+						"description": "Get providers filtered by service type and location"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/available-services",
+							"host": ["{{base_url}}"],
+							"path": ["api", "available-services"]
+						},
+						"description": "Get all services from verified providers for customer dashboard"
+					},
+					"response": []
+				},
+				{
+					"name": "Book Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{user_id}}\",\n    \"customer_name\": \"Test Customer\",\n    \"customer_email\": \"customer@test.com\",\n    \"customer_phone\": \"09123456789\",\n    \"provider_id\": \"{{provider_id}}\",\n    \"service_type\": \"cleaning\",\n    \"booking_time\": \"2024-12-20T10:00:00\",\n    \"service_address\": \"123 Test Street, Manila\",\n    \"special_instructions\": \"Please bring cleaning supplies\",\n    \"price\": 500\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/book",
+							"host": ["{{base_url}}"],
+							"path": ["api", "book"]
+						},
+						"description": "Customer books a service. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/update-profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "update-profile"]
+						},
+						"description": "Get current user profile. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"services\": [\"cleaning\", \"plumbing\", \"electrical\"],\n    \"hourly_rate\": 600,\n    \"location\": \"Quezon City\",\n    \"description\": \"Updated description\",\n    \"service_radius\": 15,\n    \"equipment\": \"Updated equipment list\",\n    \"fullName\": \"Updated Name\",\n    \"email\": \"updated@test.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/update-profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "update-profile"]
+						},
+						"description": "Update provider profile. Requires provider authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bookings",
+			"item": [
+				{
+					"name": "Get My Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/my-bookings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "my-bookings"]
+						},
+						"description": "Get bookings for current user (customer or provider). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/{{booking_id}}/accept",
+							"host": ["{{base_url}}"],
+							"path": ["api", "{{booking_id}}", "accept"]
+						},
+						"description": "Provider accepts a booking. Requires provider authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Not available at that time\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/{{booking_id}}/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "{{booking_id}}", "reject"]
+						},
+						"description": "Provider rejects a booking with reason. Requires provider authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Price",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"final_price\": 750\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/{{booking_id}}/update-price",
+							"host": ["{{base_url}}"],
+							"path": ["api", "{{booking_id}}", "update-price"]
+						},
+						"description": "Provider updates the final price for a booking. Requires provider authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/{{booking_id}}/complete",
+							"host": ["{{base_url}}"],
+							"path": ["api", "{{booking_id}}", "complete"]
+						},
+						"description": "Provider marks booking as completed. Requires provider authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5,\n    \"review\": \"Excellent service! Very professional and punctual.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/{{booking_id}}/rate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "{{booking_id}}", "rate"]
+						},
+						"description": "Customer rates and reviews provider after completed booking. Requires customer authentication. Rating must be 1-5. Review is optional (max 1000 characters)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Service Requests",
+			"item": [
+				{
+					"name": "Create Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": \"service123\",\n    \"status\": \"pending\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/requests/create",
+							"host": ["{{base_url}}"],
+							"path": ["api", "requests", "create"]
+						},
+						"description": "Create a new service request. Requires authentication via Authorization header."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/requests/my-requests",
+							"host": ["{{base_url}}"],
+							"path": ["api", "requests", "my-requests"]
+						},
+						"description": "Get all requests for the current user. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/requests/pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "requests", "pending"]
+						},
+						"description": "Get all pending service requests. No authentication required."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Request",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"accepted\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/requests/{{request_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "requests", "{{request_id}}"]
+						},
+						"description": "Update a service request status. ⚠️ NOTE: Currently has NO authentication check - security issue!"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "Get Provider Reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/provider/{{provider_id}}?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "provider", "{{provider_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get all reviews and ratings for a specific provider. No authentication required. Supports pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking Review",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/booking/{{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "booking", "{{booking_id}}"]
+						},
+						"description": "Get review for a specific booking. Requires authentication. Customer can see their own, provider can see reviews for their bookings."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Reviews",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/my-reviews",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "my-reviews"]
+						},
+						"description": "Get all reviews written by the current customer. Requires customer authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Messaging",
+			"item": [
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipient_id\": \"{{provider_id}}\",\n    \"message\": \"Hello, I have a question about the booking.\",\n    \"booking_id\": \"{{booking_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/messages/send",
+							"host": ["{{base_url}}"],
+							"path": ["api", "messages", "send"]
+						},
+						"description": "Send a message between customer and provider. Requires authentication. booking_id is optional."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/messages/conversation/{{provider_id}}?page=1&limit=50",
+							"host": ["{{base_url}}"],
+							"path": ["api", "messages", "conversation", "{{provider_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "booking_id",
+									"value": "{{booking_id}}",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get conversation history with another user. Requires authentication. Automatically marks messages as read. Supports pagination and optional booking_id filter."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Conversations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/messages/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "messages", "conversations"]
+						},
+						"description": "Get all conversations for current user. Returns list of users with last message and unread count. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/messages/unread-count",
+							"host": ["{{base_url}}"],
+							"path": ["api", "messages", "unread-count"]
+						},
+						"description": "Get count of unread messages for current user. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Messages as Read",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"other_user_id\": \"{{provider_id}}\",\n    \"message_ids\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/messages/mark-read",
+							"host": ["{{base_url}}"],
+							"path": ["api", "messages", "mark-read"]
+						},
+						"description": "Mark messages as read. Can mark all messages from a user, or specific message IDs. Requires authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin - Provider Management",
+			"item": [
+				{
+					"name": "Get Pending Providers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/providers/pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "providers", "pending"]
+						},
+						"description": "Get all pending (unverified) providers. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Verified Providers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/providers/verified",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "providers", "verified"]
+						},
+						"description": "Get all verified providers. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Provider Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/providers/{{provider_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "providers", "{{provider_id}}"]
+						},
+						"description": "Get detailed information about a specific provider. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/verify-provider/{{provider_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "verify-provider", "{{provider_id}}"]
+						},
+						"description": "Admin verifies a provider. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Provider",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Incomplete documentation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/reject-provider/{{provider_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reject-provider", "{{provider_id}}"]
+						},
+						"description": "Admin rejects a provider with a reason. Requires admin authentication and reason in body."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Provider",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/delete-provider/{{provider_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "delete-provider", "{{provider_id}}"]
+						},
+						"description": "Admin deletes a provider account. Cannot delete if provider has bookings. Requires admin authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin - Disputes",
+			"item": [
+				{
+					"name": "Get All Disputes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/disputes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "disputes"]
+						},
+						"description": "Get all disputes (admin sees all, provider sees only their own). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Dispute",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\",\n    \"customer_id\": \"{{user_id}}\",\n    \"provider_id\": \"{{provider_id}}\",\n    \"description\": \"Service was not completed as promised\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/disputes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "disputes"]
+						},
+						"description": "Customer creates a dispute. Requires customer authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/disputes/{{dispute_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "disputes", "{{dispute_id}}"]
+						},
+						"description": "Get dispute details. Admin can see all, provider can only see their own. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Resolve Dispute",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resolution_notes\": \"Dispute resolved in favor of customer. Refund issued.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/disputes/{{dispute_id}}/resolve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "disputes", "{{dispute_id}}", "resolve"]
+						},
+						"description": "Admin resolves a dispute. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Dispute Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{provider_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"response\": \"We completed the service as agreed. Customer is mistaken.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/disputes/{{dispute_id}}/response",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "disputes", "{{dispute_id}}", "response"]
+						},
+						"description": "Provider adds response to a dispute. Requires provider authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin - Reports",
+			"item": [
+				{
+					"name": "Get All Reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports"]
+						},
+						"description": "Get all reports (admin sees all, provider sees only their own). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"booking_id\": \"{{booking_id}}\",\n    \"customer_id\": \"{{user_id}}\",\n    \"provider_id\": \"{{provider_id}}\",\n    \"details\": \"Provider was unprofessional\",\n    \"type\": \"service_report\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports"]
+						},
+						"description": "Customer creates a report. Requires customer authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports/{{report_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports", "{{report_id}}"]
+						},
+						"description": "Get report details. Admin can see all, provider can only see their own. Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"notes\": \"Report reviewed and action taken\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports/{{report_id}}/check",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports", "{{report_id}}", "check"]
+						},
+						"description": "Admin marks a report as checked/reviewed. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Daily Bookings Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports/daily-bookings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports", "daily-bookings"]
+						},
+						"description": "Generate daily bookings report. Requires admin authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Provider Activity Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/reports/provider-activity",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "reports", "provider-activity"]
+						},
+						"description": "Provider activity report. Requires admin authentication."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin - Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/admin/dashboard/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "dashboard", "stats"]
+						},
+						"description": "Get dashboard statistics for admin. Requires admin authentication."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-add Authorization header if token exists",
+					"if (pm.collectionVariables.get(\"token\") && !pm.request.headers.has(\"Authorization\")) {",
+					"    // Only add if not already present",
+					"    var token = pm.collectionVariables.get(\"token\");",
+					"    if (token) {",
+					"        pm.request.headers.add({",
+					"            key: \"Authorization\",",
+					"            value: \"Bearer \" + token",
+					"        });",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:5000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "provider_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "provider_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "booking_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "request_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "dispute_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "report_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_role",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reset_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

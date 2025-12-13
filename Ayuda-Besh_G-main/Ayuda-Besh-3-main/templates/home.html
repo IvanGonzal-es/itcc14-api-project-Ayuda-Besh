@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}AyudaBesh - Professional Services{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="landing-page">
+    <header class="landing-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <a href="/" style="text-decoration: none; display: inline-block;">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="AyudaBesh" class="main-logo" width="200" height="60">
+                </a>
+            </div>
+            <nav class="landing-nav">
+                <a href="{{ url_for('frontend.login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('frontend.signup') }}" class="nav-link primary">Sign Up</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="landing-main">
+        <section class="hero">
+            <h1>Welcome to AyudaBesh</h1>
+            <p>Your trusted platform for professional home services</p>
+            <div class="hero-cta">
+                <a href="{{ url_for('frontend.signup') }}?role=customer" class="btn btn-primary">Get Services</a>
+                <a href="{{ url_for('frontend.signup') }}?role=provider" class="btn btn-secondary">Become a Provider</a>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
