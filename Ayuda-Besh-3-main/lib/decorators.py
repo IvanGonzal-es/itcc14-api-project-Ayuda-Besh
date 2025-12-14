@@ -8,27 +8,27 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         try:
-        token = None
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            if auth_header.startswith('Bearer '):
-                token = auth_header.split(" ")[1]
-        if not token:
-            token = request.cookies.get('token')
-            
-        if not token:
-            if not request.path.startswith('/api/'):
-                return redirect(url_for('frontend.login'))
-            return jsonify({'error': 'Token is missing!'}), 401
+            token = None
+            if 'Authorization' in request.headers:
+                auth_header = request.headers['Authorization']
+                if auth_header.startswith('Bearer '):
+                    token = auth_header.split(" ")[1]
+            if not token:
+                token = request.cookies.get('token')
+                
+            if not token:
+                if not request.path.startswith('/api/'):
+                    return redirect(url_for('frontend.login'))
+                return jsonify({'error': 'Token is missing!'}), 401
 
-        payload = verify_token(token)
-        if not payload:
-            if not request.path.startswith('/api/'):
-                return redirect(url_for('frontend.login'))
-            return jsonify({'error': 'Token is invalid or expired!'}), 401
+            payload = verify_token(token)
+            if not payload:
+                if not request.path.startswith('/api/'):
+                    return redirect(url_for('frontend.login'))
+                return jsonify({'error': 'Token is invalid or expired!'}), 401
 
-        request.current_user = payload
-        return f(*args, **kwargs)
+            request.current_user = payload
+            return f(*args, **kwargs)
         except Exception as e:
             # Ensure all exceptions return JSON for API routes
             if request.path.startswith('/api/'):

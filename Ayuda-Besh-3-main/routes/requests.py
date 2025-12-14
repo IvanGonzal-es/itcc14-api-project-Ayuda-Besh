@@ -25,7 +25,7 @@ def create_request():
         if not service_id:
             return jsonify({'error': 'Missing required fields'}), 400
         
-            db = get_database()
+        db = get_database()
         requests_collection = db['service_requests']
         
         result = requests_collection.insert_one({
@@ -53,7 +53,7 @@ def get_my_requests():
     """Get all requests for the current user"""
     try:
         user_id = request.current_user['user_id']
-            db = get_database()
+        db = get_database()
         requests_collection = db['service_requests']
         
         requests = list(requests_collection.find(
@@ -77,8 +77,8 @@ def get_my_requests():
 @requests_bp.route('/pending', methods=['GET'])
 def get_pending_requests():
     """Get all pending service requests"""
-        try:
-            db = get_database()
+    try:
+        db = get_database()
         requests_collection = db['service_requests']
         
         requests = list(requests_collection.find(
@@ -110,7 +110,7 @@ def update_request(request_id):
         if not status:
             return jsonify({'error': 'Missing status field'}), 400
         
-            db = get_database()
+        db = get_database()
         requests_collection = db['service_requests']
         
         try:

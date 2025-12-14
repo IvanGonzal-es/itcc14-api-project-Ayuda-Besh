@@ -116,7 +116,7 @@ def get_providers():
 def book_service():
     """Customer books a service"""
     try:
-    data = request.get_json()
+        data = request.get_json()
         if not data:
             response = jsonify({'error': 'Request body is missing or invalid JSON'})
             response.headers['Content-Type'] = 'application/json'
@@ -136,8 +136,8 @@ def book_service():
             response = jsonify({'error': 'User ID not found in token'})
             response.headers['Content-Type'] = 'application/json'
             return response, 401
-    
-    db = get_database()
+        
+        db = get_database()
         
         # Parse booking time
         try:
@@ -147,23 +147,23 @@ def book_service():
             response.headers['Content-Type'] = 'application/json'
             return response, 400
         
-    booking = {
+        booking = {
             'customer_id': ObjectId(user_id),
-        'customer_name': data.get('customer_name', ''),
-        'customer_email': data.get('customer_email', ''),
-        'customer_phone': data.get('customer_phone', ''),
-        'provider_id': ObjectId(data['provider_id']),
-        'service_type': data['service_type'],
+            'customer_name': data.get('customer_name', ''),
+            'customer_email': data.get('customer_email', ''),
+            'customer_phone': data.get('customer_phone', ''),
+            'provider_id': ObjectId(data['provider_id']),
+            'service_type': data['service_type'],
             'booking_time': booking_time,
-        'service_address': data.get('service_address', ''),
-        'special_instructions': data.get('special_instructions', ''),
-        'status': 'pending',
+            'service_address': data.get('service_address', ''),
+            'special_instructions': data.get('special_instructions', ''),
+            'status': 'pending',
             'price': float(data.get('price', 0)),
-        'final_price': None,  # Will be set by provider
-        'created_at': datetime.utcnow()
-    }
-    
-    result = db.bookings.insert_one(booking)
+            'final_price': None,  # Will be set by provider
+            'created_at': datetime.utcnow()
+        }
+        
+        result = db.bookings.insert_one(booking)
         booking_id = str(result.inserted_id)
         
         # Create notification for provider
@@ -257,14 +257,14 @@ def update_provider_profile():
         
         # Service-related fields (for providers)
         if role == 'provider':
-    if 'services' in data:
-        update_data['services_offered'] = data.get('services', [])
-    if 'hourly_rate' in data:
-        update_data['hourly_rate'] = data.get('hourly_rate', 500)
-    if 'service_radius' in data:
-        update_data['service_radius'] = data.get('service_radius', 0)
-    if 'equipment' in data:
-        update_data['equipment'] = data.get('equipment', '')
+            if 'services' in data:
+                update_data['services_offered'] = data.get('services', [])
+            if 'hourly_rate' in data:
+                update_data['hourly_rate'] = data.get('hourly_rate', 500)
+            if 'service_radius' in data:
+                update_data['service_radius'] = data.get('service_radius', 0)
+            if 'equipment' in data:
+                update_data['equipment'] = data.get('equipment', '')
     
         # Common fields
         if 'location' in data:
