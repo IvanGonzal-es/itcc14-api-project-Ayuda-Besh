@@ -9,7 +9,7 @@
 {% block content %}
 <div class="signup-desktop">
     <div class="signup-container">
-        <form class="signup-form" id="signupForm">
+        <form class="signup-form" id="signupForm" novalidate>
             <h2>Create Your Account</h2>
 
             <div id="errorMessage" class="error-message" style="display: none;"></div>
@@ -219,89 +219,125 @@ function toggleProviderFields() {
     }
 }
 
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    const signupForm = document.getElementById('signupForm');
+    if (!signupForm) {
+        console.error('Signup form not found');
+        return;
+    }
 
-    const errorDiv = document.getElementById('errorMessage');
-    const signupButton = document.getElementById('signupButton');
-    const role = document.querySelector('input[name="role"]:checked').value;
-    
-    const formData = {
-        username: document.getElementById('username').value,
-        fullName: document.getElementById('fullName').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        password: document.getElementById('password').value,
-        confirmPassword: document.getElementById('confirmPassword').value,
-        role: role
-    };
+    signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-    // Add provider-specific fields if role is provider
-    if (role === 'provider') {
-        const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value);
+        const errorDiv = document.getElementById('errorMessage');
+        const signupButton = document.getElementById('signupButton');
         
-        if (selectedServices.length === 0) {
-            errorDiv.textContent = "Please select at least one service you offer";
+        if (!errorDiv || !signupButton) {
+            console.error('Required form elements not found');
+            return;
+        }
+        
+        const roleRadio = document.querySelector('input[name="role"]:checked');
+        if (!roleRadio) {
+            errorDiv.textContent = 'Please select a role';
             errorDiv.style.display = 'block';
             return;
         }
         
-        formData.services_offered = selectedServices;
-        formData.location = document.getElementById('location').value;
-        formData.hourly_rate = parseInt(document.getElementById('hourlyRate').value) || 0;
-        formData.description = document.getElementById('description').value;
-        formData.service_radius = parseInt(document.getElementById('serviceRadius').value) || 0;
-        formData.equipment = document.getElementById('equipment').value || '';
-    }
+        const role = roleRadio.value;
+        
+        const formData = {
+            username: document.getElementById('username').value,
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            password: document.getElementById('password').value,
+            confirmPassword: document.getElementById('confirmPassword').value,
+            role: role
+        };
 
-    // Reset error and disable button
-    errorDiv.style.display = 'none';
-    signupButton.disabled = true;
-    signupButton.textContent = 'Creating account...';
+        // Add provider-specific fields if role is provider
+        if (role === 'provider') {
+            const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value);
+            
+            if (selectedServices.length === 0) {
+                errorDiv.textContent = "Please select at least one service you offer";
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            formData.services_offered = selectedServices;
+            formData.location = document.getElementById('location').value;
+            formData.hourly_rate = parseInt(document.getElementById('hourlyRate').value) || 0;
+            formData.description = document.getElementById('description').value;
+            formData.service_radius = parseInt(document.getElementById('serviceRadius').value) || 0;
+            formData.equipment = document.getElementById('equipment').value || '';
+        }
 
-    if (formData.password !== formData.confirmPassword) {
-        errorDiv.textContent = "Passwords do not match";
-        errorDiv.style.display = 'block';
-        signupButton.disabled = false;
-        signupButton.textContent = 'Sign Up';
-        return;
-    }
+        // Reset error and disable button
+        errorDiv.style.display = 'none';
+        signupButton.disabled = true;
+        signupButton.textContent = 'Creating account...';
 
-    try {
-        const response = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            errorDiv.textContent = data.error || 'Signup failed';
+        if (formData.password !== formData.confirmPassword) {
+            errorDiv.textContent = "Passwords do not match";
             errorDiv.style.display = 'block';
             signupButton.disabled = false;
             signupButton.textContent = 'Sign Up';
             return;
         }
 
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
 
-        // Redirect based on role
-        let redirectUrl = '/customer/dashboard';
-        if (formData.role === 'provider') {
-            redirectUrl = '/provider/dashboard';
-        } else if (formData.role === 'admin') {
-            redirectUrl = '/admin/dashboard';
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse response as JSON:', jsonError);
+                const text = await response.text();
+                console.error('Response text:', text);
+                errorDiv.textContent = 'Server error: Invalid response format';
+                errorDiv.style.display = 'block';
+                signupButton.disabled = false;
+                signupButton.textContent = 'Sign Up';
+                return;
+            }
+
+            if (!response.ok) {
+                errorDiv.textContent = data.error || 'Signup failed';
+                errorDiv.style.display = 'block';
+                signupButton.disabled = false;
+                signupButton.textContent = 'Sign Up';
+                return;
+            }
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+
+            // Redirect based on role
+            let redirectUrl = '/customer/dashboard';
+            if (formData.role === 'provider') {
+                redirectUrl = '/provider/dashboard';
+            } else if (formData.role === 'admin') {
+                redirectUrl = '/admin/dashboard';
+            }
+            window.location.href = redirectUrl;
+
+        } catch (err) {
+            console.error('Signup error:', err);
+            errorDiv.textContent = 'An error occurred during signup: ' + (err.message || 'Please try again');
+            errorDiv.style.display = 'block';
+            signupButton.disabled = false;
+            signupButton.textContent = 'Sign Up';
         }
-        window.location.href = redirectUrl;
-
-    } catch (err) {
-        errorDiv.textContent = 'An error occurred during signup';
-        errorDiv.style.display = 'block';
-        signupButton.disabled = false;
-        signupButton.textContent = 'Sign Up';
-    }
+    });
 });
 </script>
 {% endblock %}
