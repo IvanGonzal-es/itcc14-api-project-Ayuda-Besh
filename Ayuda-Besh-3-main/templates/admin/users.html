@@ -1,0 +1,678 @@
+<!-- templates/admin/users.html -->
+{% extends "base.html" %}
+
+{% block title %}User Management - AyudaBesh Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/customer_dashboard.css') }}">
+<style>
+.user-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: end;
+    margin-top: 15px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-group select,
+.filter-group input {
+    padding: 10px 14px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+    outline: none;
+    border-color: #0070f3;
+    box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+}
+
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-table thead {
+    background: #0070f3;
+    color: white;
+}
+
+.user-table th {
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f3f5;
+    vertical-align: middle;
+}
+
+.user-table tbody tr {
+    transition: background 0.2s;
+}
+
+.user-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.user-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-customer {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.role-provider {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.role-admin {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-verified {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.action-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #0070f3;
+    color: white;
+}
+
+.action-btn:hover {
+    background: #0051cc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.detail-section {
+    margin-bottom: 25px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    color: #212529;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .user-filters {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .user-table {
+        min-width: 800px;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customer-dashboard">
+    <div class="dashboard-header">
+        <h1>User Management</h1>
+        <button class="btn btn-outline" onclick="window.location.href='/admin/dashboard'">
+            ← Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid" style="margin-bottom: 30px;" id="summaryStats">
+        <!-- Stats will be loaded here -->
+    </div>
+
+    <!-- Filters -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Filter & Search</h2>
+        </div>
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="font-size: 0.9rem; color: #6c757d;">Found: <strong id="userCount" style="color: #212529;">0</strong> users</span>
+            </div>
+            <div class="user-filters">
+                <div class="filter-group">
+                    <label for="roleFilter">Role</label>
+                    <select id="roleFilter" onchange="loadUsers()">
+                        <option value="">All Roles</option>
+                        <option value="customer">Customers</option>
+                        <option value="provider">Providers</option>
+                        <option value="admin">Admins</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchInput">Search</label>
+                    <input type="text" id="searchInput" placeholder="Name, email, or username..." onkeyup="debounceSearch()">
+                </div>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-outline" onclick="clearFilters()" style="padding: 10px 20px; width: 100%;">
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="content-section" style="margin-top: 30px;">
+        <div class="section-header">
+            <h2>User List</h2>
+            <button class="btn btn-outline" onclick="loadUsers()" style="padding: 10px 16px; font-size: 0.9rem;">
+                🔄 Refresh
+            </button>
+        </div>
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px;">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="8" class="loading-state">
+                            <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0070f3; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div style="margin-top: 10px;">Loading users...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div id="userDetailsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px;">
+    <div style="background: white; border-radius: 12px; padding: 0; max-width: 700px; width: 100%; position: relative; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="padding: 25px; border-bottom: 2px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px 12px 0 0;">
+            <h2 style="margin: 0; color: white; font-size: 1.5rem; font-weight: 700;">👤 User Details</h2>
+            <button onclick="closeUserDetailsModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+        </div>
+        <div style="padding: 30px;" id="userDetailsContent">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        loadUsers();
+    }, 500);
+}
+
+function clearFilters() {
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    loadUsers();
+}
+
+async function loadUsers() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/admin/login';
+        return;
+    }
+
+    const roleFilter = document.getElementById('roleFilter').value;
+    const searchQuery = document.getElementById('searchInput').value;
+
+    let url = '/api/admin/users?';
+    if (roleFilter) url += `role=${roleFilter}&`;
+    if (searchQuery) url += `search=${encodeURIComponent(searchQuery)}&`;
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load users');
+        }
+
+        const data = await response.json();
+        displayUsers(data.users, data.summary);
+        document.getElementById('userCount').textContent = data.users.length;
+    } catch (error) {
+        console.error('Error loading users:', error);
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <div class="empty-state-icon" style="color: #dc3545;">⚠️</div>
+                    <div class="empty-state-text" style="color: #dc3545;">Error loading users</div>
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #adb5bd;">Please try again or refresh the page</div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function displayUsers(users, summary) {
+    // Display summary stats
+    const statsHtml = `
+        <div class="stat-card">
+            <div class="stat-value" style="color: #0070f3;">${summary.total}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: #28a745;">${summary.total_customers}</div>
+            <div class="stat-label">Customers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: #ffc107;">${summary.total_providers}</div>
+            <div class="stat-label">Providers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" style="color: #6f42c1;">${summary.total_admins}</div>
+            <div class="stat-label">Admins</div>
+        </div>
+    `;
+    document.getElementById('summaryStats').innerHTML = statsHtml;
+
+    // Display users table
+    if (users.length === 0) {
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-text">No users found matching your filters</div>
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #adb5bd;">Try adjusting your search criteria</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = '';
+    users.forEach(user => {
+        const roleClass = `role-${user.role}`;
+        let statusHtml = '';
+        if (user.role === 'provider') {
+            if (user.is_verified) {
+                statusHtml = '<span class="status-badge status-verified">✓ Verified</span>';
+            } else {
+                statusHtml = '<span class="status-badge status-pending">⏳ Pending</span>';
+            }
+        } else {
+            statusHtml = '<span style="color: #adb5bd; font-size: 0.85rem;">-</span>';
+        }
+
+        const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        }) : 'N/A';
+
+        html += `
+            <tr>
+                <td><strong style="color: #212529;">${user.username || 'N/A'}</strong></td>
+                <td>${user.fullName || 'N/A'}</td>
+                <td style="color: #495057;">${user.email || 'N/A'}</td>
+                <td style="color: #6c757d;">${user.phone || 'N/A'}</td>
+                <td><span class="role-badge ${roleClass}">${user.role}</span></td>
+                <td>${statusHtml}</td>
+                <td style="color: #6c757d; font-size: 0.9rem;">${createdAt}</td>
+                <td>
+                    <button class="action-btn" onclick="viewUserDetails('${user._id}')">
+                        View
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('usersTableBody').innerHTML = html;
+}
+
+async function viewUserDetails(userId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/admin/login';
+        return;
+    }
+
+    // Show loading state
+    const modal = document.getElementById('userDetailsModal');
+    const content = document.getElementById('userDetailsContent');
+    content.innerHTML = '<div style="text-align: center; padding: 40px;"><div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #0070f3; border-radius: 50%; animation: spin 1s linear infinite;"></div><div style="margin-top: 10px; color: #6c757d;">Loading user details...</div></div>';
+    modal.style.display = 'flex';
+
+    try {
+        // Get user details from the users list (we already have it)
+        const users = await fetchUsersData();
+        const user = users.find(u => u._id === userId);
+        
+        if (!user) {
+            // If not in current list, fetch from API
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'User not found');
+            }
+            
+            const userData = await response.json();
+            displayUserDetails(userData);
+        } else {
+            displayUserDetails(user);
+        }
+    } catch (error) {
+        console.error('Error loading user details:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545;">
+                <div style="font-size: 2rem; margin-bottom: 10px;">⚠️</div>
+                <div>Error loading user details</div>
+                <div style="font-size: 0.85rem; color: #6c757d; margin-top: 5px;">${error.message || 'Please try again'}</div>
+            </div>
+        `;
+    }
+}
+
+async function fetchUsersData() {
+    const token = localStorage.getItem('token');
+    const roleFilter = document.getElementById('roleFilter').value;
+    const searchQuery = document.getElementById('searchInput').value;
+
+    let url = '/api/admin/users?';
+    if (roleFilter) url += `role=${roleFilter}&`;
+    if (searchQuery) url += `search=${encodeURIComponent(searchQuery)}&`;
+
+    const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.users || [];
+}
+
+function displayUserDetails(user) {
+    const content = document.getElementById('userDetailsContent');
+    
+    const roleClass = `role-${user.role}`;
+    let statusHtml = '';
+    if (user.role === 'provider') {
+        if (user.is_verified) {
+            statusHtml = '<span class="status-badge status-verified">✓ Verified</span>';
+        } else {
+            statusHtml = '<span class="status-badge status-pending">⏳ Pending Verification</span>';
+        }
+    } else {
+        statusHtml = '<span style="color: #adb5bd;">Active</span>';
+    }
+
+    const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+
+    const verifiedAt = user.verified_at ? new Date(user.verified_at).toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'Not verified';
+
+    let providerInfo = '';
+    if (user.role === 'provider') {
+        providerInfo = `
+            <div class="detail-section">
+                <h3 style="margin: 0 0 15px 0; color: #212529; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">Provider Information</h3>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">${user.location || 'Not specified'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Hourly Rate:</span>
+                        <span class="detail-value">₱${user.hourly_rate || 0}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Service Radius:</span>
+                        <span class="detail-value">${user.service_radius || 0} km</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Rating:</span>
+                        <span class="detail-value">${user.rating || 0} ⭐</span>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <span class="detail-label">Services Offered:</span>
+                        <span class="detail-value">${user.services_offered && user.services_offered.length > 0 ? user.services_offered.join(', ') : 'None specified'}</span>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <span class="detail-label">Description:</span>
+                        <span class="detail-value">${user.description || 'No description provided'}</span>
+                    </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <span class="detail-label">Equipment:</span>
+                        <span class="detail-value">${user.equipment || 'Not specified'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Verified At:</span>
+                        <span class="detail-value">${verifiedAt}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    content.innerHTML = `
+        <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+            <div class="detail-section">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #e9ecef;">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                        ${(user.fullName || user.username || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0 0 5px 0; color: #212529; font-size: 1.5rem;">${user.fullName || 'N/A'}</h2>
+                        <p style="margin: 0; color: #6c757d; font-size: 0.9rem;">@${user.username || 'N/A'}</p>
+                        <div style="margin-top: 8px;">
+                            <span class="role-badge ${roleClass}">${user.role}</span>
+                            <span style="margin-left: 10px;">${statusHtml}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3 style="margin: 0 0 15px 0; color: #212529; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">Account Information</h3>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">${user.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone:</span>
+                        <span class="detail-value">${user.phone || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Account Created:</span>
+                        <span class="detail-value">${createdAt}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">User ID:</span>
+                        <span class="detail-value" style="font-family: monospace; font-size: 0.85rem;">${user._id}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${providerInfo}
+
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e9ecef; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="closeUserDetailsModal()" style="padding: 10px 20px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function closeUserDetailsModal() {
+    document.getElementById('userDetailsModal').style.display = 'none';
+}
+
+// Override logout function for admin pages
+function logout() {
+    fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+    }).finally(() => {
+        localStorage.clear();
+        window.location.href = '/admin/login';
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('userDetailsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUserDetailsModal();
+    }
+});
+
+// Load users on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+});
+
+// Add CSS animation for loading spinner
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

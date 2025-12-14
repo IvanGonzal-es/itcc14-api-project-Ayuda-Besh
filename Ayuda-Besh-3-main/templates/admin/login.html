@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - AyudaBesh{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+<style>
+.admin-login-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.admin-login-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    padding: 40px;
+    width: 100%;
+    max-width: 450px;
+}
+
+.admin-login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.admin-login-header h1 {
+    color: #667eea;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+}
+
+.admin-login-header p {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.admin-badge {
+    display: inline-block;
+    background: #f3e5f5;
+    color: #7b1fa2;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
+}
+
+.input-group label {
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.login-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 20px;
+}
+
+.login-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #c33;
+    font-size: 0.9rem;
+}
+
+.back-link {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.back-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.back-link a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-login-container">
+    <div class="admin-login-card">
+        <div class="admin-login-header">
+            <h1>🔐 Admin Portal</h1>
+            <p>Administrator Access Only</p>
+            <span class="admin-badge">Secure Access</span>
+        </div>
+
+        <!-- Tab Switcher -->
+        <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e9ecef;">
+            <button type="button" id="loginTab" onclick="switchTab('login')" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
+                Login
+            </button>
+            <button type="button" id="signupTab" onclick="switchTab('signup')" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 3px solid transparent; color: #6c757d; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
+                Create Admin Account
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="adminLoginForm" novalidate style="display: block;">
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter admin username"
+                    required
+                    autocomplete="username"
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter admin password"
+                    required
+                    autocomplete="current-password"
+                />
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">
+                Sign In to Admin Portal
+            </button>
+
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="#" onclick="showForgotPassword(); return false;" style="color: #667eea; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+                    Forgot Password?
+                </a>
+            </div>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="adminSignupForm" novalidate style="display: none;">
+            <div id="signupErrorMessage" class="error-message" style="display: none;"></div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupUsername">Username *</label>
+                <input
+                    type="text"
+                    id="signupUsername"
+                    name="username"
+                    placeholder="Choose a username"
+                    required
+                    autocomplete="username"
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupFullName">Full Name *</label>
+                <input
+                    type="text"
+                    id="signupFullName"
+                    name="fullName"
+                    placeholder="Enter your full name"
+                    required
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupEmail">Email *</label>
+                <input
+                    type="email"
+                    id="signupEmail"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                    autocomplete="email"
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupPhone">Phone Number *</label>
+                <input
+                    type="tel"
+                    id="signupPhone"
+                    name="phone"
+                    placeholder="+63 912 345 6789"
+                    required
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupPassword">Password *</label>
+                <input
+                    type="password"
+                    id="signupPassword"
+                    name="password"
+                    placeholder="Create a password (min 6 characters)"
+                    required
+                    minlength="6"
+                    autocomplete="new-password"
+                />
+            </div>
+
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label for="signupConfirmPassword">Confirm Password *</label>
+                <input
+                    type="password"
+                    id="signupConfirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm your password"
+                    required
+                    minlength="6"
+                    autocomplete="new-password"
+                />
+            </div>
+
+            <button type="submit" class="login-button" id="signupButton">
+                Create Admin Account
+            </button>
+        </form>
+
+        <!-- Forgot Password Modal -->
+        <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: white; border-radius: 12px; padding: 30px; max-width: 400px; width: 90%; position: relative;">
+                <button onclick="closeForgotPassword()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c757d;">&times;</button>
+                <h2 style="margin: 0 0 20px 0; color: #212529; font-size: 1.5rem;">Reset Admin Password</h2>
+                <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 20px;">Enter your admin email or username to receive password reset instructions.</p>
+                
+                <div id="forgotPasswordError" class="error-message" style="display: none; margin-bottom: 15px;"></div>
+                <div id="forgotPasswordSuccess" style="display: none; background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #28a745;">
+                    Password reset instructions have been sent to your email.
+                </div>
+
+                <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event); return false;">
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="forgotIdentifier">Email or Username</label>
+                        <input
+                            type="text"
+                            id="forgotIdentifier"
+                            name="identifier"
+                            placeholder="Enter your admin email or username"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" class="login-button" id="forgotPasswordButton">
+                        Send Reset Instructions
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (!adminLoginForm) {
+        console.error('Admin login form not found');
+        return;
+    }
+
+    adminLoginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const errorDiv = document.getElementById('errorMessage');
+        const loginButton = document.getElementById('loginButton');
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            errorDiv.textContent = 'Please enter both username and password';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        loginButton.disabled = true;
+        loginButton.textContent = 'Signing in...';
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    role: 'admin'  // Force admin role for admin login
+                })
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse response as JSON:', jsonError);
+                const text = await response.text();
+                console.error('Response text:', text);
+                errorDiv.textContent = 'Server error: Invalid response format';
+                errorDiv.style.display = 'block';
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign In to Admin Portal';
+                return;
+            }
+
+            if (!response.ok) {
+                errorDiv.textContent = data.error || 'Login failed. Please check your credentials.';
+                errorDiv.style.display = 'block';
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign In to Admin Portal';
+                return;
+            }
+
+            // Verify that the logged-in user is actually an admin
+            if (data.user && data.user.role !== 'admin') {
+                errorDiv.textContent = 'Access denied. This account does not have admin privileges.';
+                errorDiv.style.display = 'block';
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign In to Admin Portal';
+                return;
+            }
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+
+            // Redirect to admin dashboard
+            window.location.href = '/admin/dashboard';
+
+        } catch (err) {
+            console.error('Login error:', err);
+            errorDiv.textContent = 'Network error: ' + (err.message || 'Please check your connection and try again');
+            errorDiv.style.display = 'block';
+            loginButton.disabled = false;
+            loginButton.textContent = 'Sign In to Admin Portal';
+        }
+    });
+
+    function showForgotPassword() {
+        document.getElementById('forgotPasswordModal').style.display = 'flex';
+    }
+
+    function closeForgotPassword() {
+        document.getElementById('forgotPasswordModal').style.display = 'none';
+        document.getElementById('forgotPasswordError').style.display = 'none';
+        document.getElementById('forgotPasswordSuccess').style.display = 'none';
+        document.getElementById('forgotPasswordForm').reset();
+    }
+
+    async function handleForgotPassword(event) {
+        event.preventDefault();
+        
+        const errorDiv = document.getElementById('forgotPasswordError');
+        const successDiv = document.getElementById('forgotPasswordSuccess');
+        const submitButton = document.getElementById('forgotPasswordButton');
+        const identifier = document.getElementById('forgotIdentifier').value.trim();
+
+        if (!identifier) {
+            errorDiv.textContent = 'Please enter your email or username';
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+
+        try {
+            const response = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    identifier: identifier,
+                    role: 'admin'  // Specify admin role for password reset
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorDiv.textContent = data.error || 'Failed to send reset instructions';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Reset Instructions';
+                return;
+            }
+
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Send Reset Instructions';
+            
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+                closeForgotPassword();
+            }, 3000);
+
+        } catch (err) {
+            console.error('Forgot password error:', err);
+            errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Send Reset Instructions';
+        }
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeForgotPassword();
+        }
+    });
+
+    // Tab switching
+    function switchTab(tab) {
+        const loginForm = document.getElementById('adminLoginForm');
+        const signupForm = document.getElementById('adminSignupForm');
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+
+        if (tab === 'login') {
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+            loginTab.style.borderBottomColor = '#667eea';
+            loginTab.style.color = '#667eea';
+            signupTab.style.borderBottomColor = 'transparent';
+            signupTab.style.color = '#6c757d';
+        } else {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            signupTab.style.borderBottomColor = '#667eea';
+            signupTab.style.color = '#667eea';
+            loginTab.style.borderBottomColor = 'transparent';
+            loginTab.style.color = '#6c757d';
+        }
+    }
+
+    // Signup form handler
+    const adminSignupForm = document.getElementById('adminSignupForm');
+    if (adminSignupForm) {
+        adminSignupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorDiv = document.getElementById('signupErrorMessage');
+            const signupButton = document.getElementById('signupButton');
+            
+            const formData = {
+                username: document.getElementById('signupUsername').value.trim(),
+                fullName: document.getElementById('signupFullName').value.trim(),
+                email: document.getElementById('signupEmail').value.trim(),
+                phone: document.getElementById('signupPhone').value.trim(),
+                password: document.getElementById('signupPassword').value,
+                confirmPassword: document.getElementById('signupConfirmPassword').value,
+                role: 'admin'
+            };
+
+            // Validation
+            if (!formData.username || !formData.fullName || !formData.email || !formData.phone || !formData.password) {
+                errorDiv.textContent = 'Please fill in all required fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (formData.password.length < 6) {
+                errorDiv.textContent = 'Password must be at least 6 characters long';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            signupButton.disabled = true;
+            signupButton.textContent = 'Creating Account...';
+
+            try {
+                const response = await fetch('/api/auth/admin/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: formData.username,
+                        fullName: formData.fullName,
+                        email: formData.email,
+                        phone: formData.phone,
+                        password: formData.password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    errorDiv.textContent = data.error || 'Failed to create admin account';
+                    errorDiv.style.display = 'block';
+                    signupButton.disabled = false;
+                    signupButton.textContent = 'Create Admin Account';
+                    return;
+                }
+
+                // Success - show message and switch to login
+                errorDiv.style.display = 'none';
+                alert('Admin account created successfully! Please login with your credentials.');
+                adminSignupForm.reset();
+                switchTab('login');
+                document.getElementById('username').value = formData.username;
+                signupButton.disabled = false;
+                signupButton.textContent = 'Create Admin Account';
+
+            } catch (err) {
+                console.error('Signup error:', err);
+                errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
+                errorDiv.style.display = 'block';
+                signupButton.disabled = false;
+                signupButton.textContent = 'Create Admin Account';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
