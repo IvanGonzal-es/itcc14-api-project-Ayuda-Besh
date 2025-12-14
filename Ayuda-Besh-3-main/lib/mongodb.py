@@ -35,5 +35,15 @@ def init_db(app: Flask):
 def get_database():
     """Returns the MongoDB database instance"""
     if db is None:
-        raise RuntimeError("Database not initialized. Call init_db(app) first in your app startup.")
+        mongodb_uri = os.getenv('MONGODB_URI')
+        if not mongodb_uri:
+            raise RuntimeError(
+                "Database not initialized. MONGODB_URI is not set in environment variables. "
+                "Please check your .env file and ensure MONGODB_URI is configured."
+            )
+        else:
+            raise RuntimeError(
+                "Database not initialized. Database connection failed during app startup. "
+                "Please check your MongoDB connection and ensure MongoDB is running."
+            )
     return db

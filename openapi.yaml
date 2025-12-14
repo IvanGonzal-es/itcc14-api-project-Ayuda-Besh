@@ -1,0 +1,1798 @@
+openapi: 3.0.3
+info:
+  title: AyudaBesh API
+  description: |
+    A service marketplace platform connecting customers with verified local providers.
+    Supports user authentication, service booking, availability management, reviews,
+    disputes, reports, notifications, and full admin moderation.
+  version: 1.0.0
+  contact:
+    name: Alice (BSIT Student)
+    email: alice@example.com
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User login, signup, password reset, logout
+  - name: Users
+    description: Profile and account management
+  - name: Services & Providers
+    description: Browse services, view providers, book services
+  - name: Bookings
+    description: Create, manage, and complete service bookings
+  - name: Availability
+    description: Provider schedule and real-time availability
+  - name: Reviews
+    description: Rate and review completed services
+  - name: Disputes & Reports
+    description: Submit and manage service disputes or reports
+  - name: Admin
+    description: Platform moderation, verification, analytics, and account control
+  - name: Notifications
+    description: User alerts and messages
+
+paths:
+  # =============== AUTH ===============
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: "User login"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: "Login successful"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security: []
+
+  /api/auth/signup:
+    post:
+      tags: [Authentication]
+      summary: "User registration"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: "Signup successful"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: []
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: "User logout"
+      responses:
+        '200':
+          description: "Logged out successfully"
+      security:
+        - JWTAuth: []
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: "Request password reset (sends verification code) - supports customer, provider, and admin roles"
+      description: "Request a password reset for any user role. Admins can use this endpoint to reset their password."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: "Verification code sent"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotPasswordResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: []
+
+  /api/auth/admin/signup:
+    post:
+      tags: [Authentication]
+      summary: "Create admin account (first admin public, subsequent require admin auth)"
+      description: |
+        Create a new admin account. 
+        - If no admins exist: Public endpoint (no authentication required) - for initial setup
+        - If admins exist: Requires admin authentication via JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdminRequest'
+      responses:
+        '201':
+          description: "Admin account created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: "Admin authentication required (when admins already exist)"
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: "Access denied - not an admin"
+          $ref: '#/components/responses/Forbidden'
+      security: []
+
+  /api/auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: "Reset password with verification code"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: "Password reset successful"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: []
+
+  # =============== USERS ===============
+  /api/update-profile:
+    get:
+      tags: [Users]
+      summary: "Get current user profile"
+      responses:
+        '200':
+          description: "User profile"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - JWTAuth: []
+    post:
+      tags: [Users]
+      summary: "Update user profile"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: "Profile updated"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - JWTAuth: []
+
+  /api/delete-account:
+    post:
+      tags: [Users]
+      summary: "Request account deletion (soft delete, requires admin approval)"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: "Deletion requested, account disabled"
+        '400':
+          description: "Cannot delete with active bookings"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - JWTAuth: []
+
+  # =============== SERVICES & PROVIDERS ===============
+  /api/services:
+    get:
+      tags: [Services & Providers]
+      summary: "Get all service categories"
+      responses:
+        '200':
+          description: "List of services"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+
+  /api/providers:
+    get:
+      tags: [Services & Providers]
+      summary: "Get available (verified) providers"
+      parameters:
+        - in: query
+          name: service
+          schema:
+            type: string
+        - in: query
+          name: location
+          schema:
+            type: string
+        - in: query
+          name: latitude
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: longitude
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: radius
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: "List of providers"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Provider'
+
+  /api/book:
+    post:
+      tags: [Bookings]
+      summary: "Create a new booking"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: "Booking created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking_id:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - JWTAuth: []
+
+  /api/available-services:
+    get:
+      tags: [Services & Providers]
+      summary: "Get all available services from verified providers"
+      responses:
+        '200':
+          description: "List of service offerings"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableService'
+
+  # =============== BOOKINGS ===============
+  /api/my-bookings:
+    get:
+      tags: [Bookings]
+      summary: "Get all bookings for current user"
+      responses:
+        '200':
+          description: "List of bookings"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/accept:
+    post:
+      tags: [Bookings]
+      summary: "Provider accepts a booking"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Booking accepted"
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/reject:
+    post:
+      tags: [Bookings]
+      summary: "Provider rejects a booking"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: "Booking rejected"
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/update-price:
+    post:
+      tags: [Bookings]
+      summary: "Provider updates final price"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                final_price:
+                  type: number
+                  format: float
+              required:
+                - final_price
+      responses:
+        '200':
+          description: "Price updated"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/complete:
+    post:
+      tags: [Bookings]
+      summary: "Provider marks booking as completed"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Booking completed"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/rate:
+    post:
+      tags: [Reviews]
+      summary: "Customer rates and reviews a completed booking"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RateProviderRequest'
+      responses:
+        '200':
+          description: "Rating submitted"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  average_rating:
+                    type: number
+                    format: float
+                  review_added:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+
+  /api/{booking_id}/cancel:
+    post:
+      tags: [Bookings]
+      summary: "Cancel a booking (customer or provider)"
+      parameters:
+        - in: path
+          name: booking_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: "Booking cancelled"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  # =============== AVAILABILITY ===============
+  /api/availability:
+    get:
+      tags: [Availability]
+      summary: "Get provider availability"
+      responses:
+        '200':
+          description: "Availability schedule"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+    put:
+      tags: [Availability]
+      summary: "Update provider availability"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAvailabilityRequest'
+      responses:
+        '200':
+          description: "Availability updated"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+    delete:
+      tags: [Availability]
+      summary: "Delete availability (reset to defaults)"
+      responses:
+        '200':
+          description: "Availability deleted"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+
+  /api/availability/check:
+    post:
+      tags: [Availability]
+      summary: "Check if provider is available at a specific time"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider_id:
+                  type: string
+                datetime:
+                  type: string
+                  format: date-time
+              required:
+                - provider_id
+                - datetime
+      responses:
+        '200':
+          description: "Availability check result"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+                  reason:
+                    type: string
+                    nullable: true
+
+  /api/availability/calendar:
+    get:
+      tags: [Availability]
+      summary: "Get monthly calendar view of availability and bookings"
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: integer
+        - in: query
+          name: year
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: "Calendar data"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+
+  # =============== REVIEWS ===============
+  /api/reviews/provider/{provider_id}:
+    get:
+      tags: [Reviews]
+      summary: "Get all reviews for a provider"
+      parameters:
+        - in: path
+          name: provider_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: "Reviews and rating stats"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/reviews/my-reviews:
+    get:
+      tags: [Reviews]
+      summary: "Get reviews written by current customer"
+      responses:
+        '200':
+          description: "List of reviews"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+
+  # =============== DISPUTES & REPORTS ===============
+  /api/admin/disputes:
+    get:
+      tags: [Disputes & Reports]
+      summary: "Get disputes - admin sees all, provider sees only their own"
+      responses:
+        '200':
+          description: "List of disputes"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+    post:
+      tags: [Disputes & Reports]
+      summary: "Create a new dispute (customer only)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                booking_id:
+                  type: string
+                customer_id:
+                  type: string
+                provider_id:
+                  type: string
+                description:
+                  type: string
+              required:
+                - booking_id
+                - customer_id
+                - provider_id
+                - description
+      responses:
+        '201':
+          description: "Dispute created"
+      security:
+        - JWTAuth: []
+
+  /api/admin/reports:
+    get:
+      tags: [Disputes & Reports]
+      summary: "Get reports - admin sees all, provider sees only their own"
+      responses:
+        '200':
+          description: "List of reports"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+    post:
+      tags: [Disputes & Reports]
+      summary: "Create a new report"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                booking_id:
+                  type: string
+                customer_id:
+                  type: string
+                provider_id:
+                  type: string
+                description:
+                  type: string
+              required:
+                - booking_id
+                - customer_id
+                - provider_id
+                - description
+      responses:
+        '201':
+          description: "Report created"
+      security:
+        - JWTAuth: []
+
+  /api/admin/disputes/{dispute_id}:
+    get:
+      tags: [Disputes & Reports]
+      summary: "Get full dispute details (admin or provider)"
+      parameters:
+        - in: path
+          name: dispute_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Dispute details with booking and user info"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/admin/reports/{report_id}:
+    get:
+      tags: [Disputes & Reports]
+      summary: "Get full report details (admin or provider)"
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Report details with booking and user info"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/admin/disputes/{dispute_id}/resolve:
+    post:
+      tags: [Disputes & Reports]
+      summary: "Admin resolves a dispute"
+      parameters:
+        - in: path
+          name: dispute_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resolution_notes:
+                  type: string
+      responses:
+        '200':
+          description: "Dispute resolved"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reports/{report_id}/check:
+    post:
+      tags: [Disputes & Reports]
+      summary: "Admin marks report as reviewed"
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: "Report marked as checked"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/disputes/{dispute_id}/response:
+    post:
+      tags: [Disputes & Reports]
+      summary: "Provider adds response to a dispute"
+      parameters:
+        - in: path
+          name: dispute_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                response:
+                  type: string
+              required:
+                - response
+      responses:
+        '200':
+          description: "Response added"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  # =============== ADMIN ===============
+  /api/admin/providers/pending:
+    get:
+      tags: [Admin]
+      summary: "Get pending (unverified) providers"
+      responses:
+        '200':
+          description: "List of providers"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/providers/verified:
+    get:
+      tags: [Admin]
+      summary: "Get verified providers"
+      responses:
+        '200':
+          description: "List of providers"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/providers/{provider_id}:
+    get:
+      tags: [Admin]
+      summary: "Get detailed information about a specific provider"
+      parameters:
+        - in: path
+          name: provider_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Provider details"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/verify-provider/{provider_id}:
+    post:
+      tags: [Admin]
+      summary: "Verify a provider (approve)"
+      parameters:
+        - in: path
+          name: provider_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Provider verified successfully"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reject-provider/{provider_id}:
+    post:
+      tags: [Admin]
+      summary: "Reject a provider with reason"
+      parameters:
+        - in: path
+          name: provider_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectProviderRequest'
+      responses:
+        '200':
+          description: "Provider rejected successfully"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/delete-provider/{provider_id}:
+    delete:
+      tags: [Admin]
+      summary: "Permanently delete a provider (only if no bookings)"
+      parameters:
+        - in: path
+          name: provider_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Provider deleted successfully"
+        '400':
+          description: "Cannot delete provider with active bookings"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/dashboard/stats:
+    get:
+      tags: [Admin]
+      summary: "Get real-time admin dashboard statistics"
+      responses:
+        '200':
+          description: "Dashboard metrics"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboardStats'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reports/daily-bookings:
+    get:
+      tags: [Admin]
+      summary: "Generate daily bookings report"
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+            example: "2025-12-14"
+      responses:
+        '200':
+          description: "Daily report data"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reports/provider-activity:
+    get:
+      tags: [Admin]
+      summary: "Get provider activity report"
+      responses:
+        '200':
+          description: "Provider activity metrics"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reports/customer-history:
+    get:
+      tags: [Admin]
+      summary: "Generate customer history report (with optional filters)"
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: string
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: "Customer history"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/reports/provider-earnings:
+    get:
+      tags: [Admin]
+      summary: "Generate provider earnings report"
+      parameters:
+        - in: query
+          name: provider_id
+          schema:
+            type: string
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: "Earnings breakdown"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/accounts/{user_id}/disable:
+    post:
+      tags: [Admin]
+      summary: "Disable a user account (temporarily or permanently)"
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisableAccountRequest'
+      responses:
+        '200':
+          description: "Account disabled"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/accounts/{user_id}/enable:
+    post:
+      tags: [Admin]
+      summary: "Re-enable a disabled user account"
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Account enabled"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/accounts/deletion-requests:
+    get:
+      tags: [Admin]
+      summary: "Get all pending account deletion requests"
+      responses:
+        '200':
+          description: "List of deletion requests"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/accounts/{user_id}/approve-deletion:
+    post:
+      tags: [Admin]
+      summary: "Approve and permanently delete a user account"
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Account deleted permanently"
+        '400':
+          description: "Cannot delete account with active bookings"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/accounts/{user_id}/reject-deletion:
+    post:
+      tags: [Admin]
+      summary: "Reject an account deletion request and re-enable the account"
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: "Deletion request rejected, account re-enabled"
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: "Get all users with filtering options"
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [customer, provider, admin]
+          description: "Filter by user role"
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: "Search by username, fullName, or email"
+      responses:
+        '200':
+          description: "List of users with summary statistics"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      total_customers:
+                        type: integer
+                      total_providers:
+                        type: integer
+                      total_admins:
+                        type: integer
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/users/{user_id}:
+    get:
+      tags: [Admin]
+      summary: "Get detailed information about a specific user"
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "User details"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  /api/admin/users/create:
+    post:
+      tags: [Admin]
+      summary: "Create a new user account (including admin accounts) - Admin only"
+      description: "Admin-only endpoint to create user accounts of any role (customer, provider, or admin). Requires admin authentication."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: "User account created successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - JWTAuth: []
+        - AdminAuth: []
+
+  # =============== NOTIFICATIONS ===============
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: "Get user notifications"
+      responses:
+        '200':
+          description: "Notifications list"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  unread_count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - JWTAuth: []
+
+  /api/notifications/{notification_id}/read:
+    post:
+      tags: [Notifications]
+      summary: "Mark notification as read"
+      parameters:
+        - in: path
+          name: notification_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Notification marked read"
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - JWTAuth: []
+
+  /api/notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: "Mark all notifications as read"
+      responses:
+        '200':
+          description: "Notifications marked read"
+      security:
+        - JWTAuth: []
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Include a valid JWT token in the `Authorization: Bearer <token>` header."
+    AdminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Access
+      description: "Implicit — admin role is verified via JWT payload."
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [customer, provider, admin]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, username, fullName, email, role]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [customer, provider, admin]
+      required: [username, password, role]
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+      required: [user, token]
+
+    SignupRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [customer, provider]
+        services_offered:
+          type: array
+          items:
+            type: string
+        location:
+          type: string
+        description:
+          type: string
+        hourly_rate:
+          type: number
+        service_radius:
+          type: number
+        equipment:
+          type: string
+      required: [username, email, phone, password, fullName]
+
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: "email, phone, or username"
+        role:
+          type: string
+          enum: [customer, provider, admin]
+      required: [identifier]
+
+    ForgotPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        reset_token:
+          type: string
+        identifier_masked:
+          type: string
+        sent_via:
+          type: array
+          items:
+            type: string
+        verification_code:
+          type: string
+          description: "Only in dev mode (if email/SMS not configured)"
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        reset_token:
+          type: string
+        verification_code:
+          type: string
+        new_password:
+          type: string
+      required: [reset_token, verification_code, new_password]
+
+    CreateAdminRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+      required: [username, email, phone, password, fullName]
+
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [customer, provider, admin]
+          default: customer
+        services_offered:
+          type: array
+          items:
+            type: string
+        location:
+          type: string
+        description:
+          type: string
+        hourly_rate:
+          type: number
+        service_radius:
+          type: number
+        equipment:
+          type: string
+        is_verified:
+          type: boolean
+          description: "For provider accounts - whether to auto-verify"
+      required: [username, email, phone, password, fullName]
+
+    Service:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+
+    Provider:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        hourly_rate:
+          type: number
+        services_offered:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+        distance_km:
+          type: number
+          nullable: true
+
+    AvailableService:
+      type: object
+      properties:
+        provider_id:
+          type: string
+        company_name:
+          type: string
+        owner_name:
+          type: string
+        service_type:
+          type: string
+        service_name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        hourly_rate:
+          type: number
+        rating:
+          type: number
+          format: float
+
+    Booking:
+      type: object
+      properties:
+        _id:
+          type: string
+        customer_id:
+          type: string
+        provider_id:
+          type: string
+        service_type:
+          type: string
+        booking_time:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, accepted, rejected, completed, cancelled]
+        price:
+          type: number
+        final_price:
+          type: number
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    CreateBookingRequest:
+      type: object
+      properties:
+        provider_id:
+          type: string
+        service_type:
+          type: string
+        booking_time:
+          type: string
+          format: date-time
+        price:
+          type: number
+        service_address:
+          type: string
+        special_instructions:
+          type: string
+      required: [provider_id, service_type, booking_time, price]
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        services:
+          type: array
+          items:
+            type: string
+        hourly_rate:
+          type: number
+        password:
+          type: string
+
+    UpdateAvailabilityRequest:
+      type: object
+      properties:
+        schedule:
+          type: object
+        specific_dates:
+          type: array
+          items:
+            type: object
+        timezone:
+          type: string
+
+    RateProviderRequest:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        review:
+          type: string
+          maxLength: 1000
+      required: [rating]
+
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [info, success, warning, error]
+        read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    RejectProviderRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+      required: [reason]
+
+    DisableAccountRequest:
+      type: object
+      properties:
+        duration_days:
+          type: integer
+          minimum: 0
+          description: "0 = permanent"
+        reason:
+          type: string
+      required: [reason]
+
+    AdminDashboardStats:
+      type: object
+      properties:
+        total_bookings:
+          type: integer
+        bookings_by_status:
+          type: object
+        total_revenue:
+          type: number
+        today_bookings:
+          type: integer
+        today_revenue:
+          type: number
+        month_bookings:
+          type: integer
+        month_revenue:
+          type: number
+        active_providers:
+          type: integer
+        pending_providers:
+          type: integer
+        total_customers:
+          type: integer
+        open_disputes:
+          type: integer
+        average_rating:
+          type: number
+          format: float
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+  responses:
+    BadRequest:
+      description: "Bad request (missing/invalid data)"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: "Authentication required"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: "Access denied (e.g., wrong role)"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+security:
+  - JWTAuth: []

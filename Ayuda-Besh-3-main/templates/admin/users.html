@@ -273,9 +273,14 @@
     <div class="content-section" style="margin-top: 30px;">
         <div class="section-header">
             <h2>User List</h2>
-            <button class="btn btn-outline" onclick="loadUsers()" style="padding: 10px 16px; font-size: 0.9rem;">
-                🔄 Refresh
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="showCreateAdminModal()" style="padding: 10px 16px; font-size: 0.9rem; background: #6f42c1; color: white; border-color: #6f42c1;">
+                    ➕ Create Admin Account
+                </button>
+                <button class="btn btn-outline" onclick="loadUsers()" style="padding: 10px 16px; font-size: 0.9rem;">
+                    🔄 Refresh
+                </button>
+            </div>
         </div>
         <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px;">
             <table class="user-table">
@@ -300,6 +305,56 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Admin Account Modal -->
+<div id="createAdminModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px;">
+    <div style="background: white; border-radius: 12px; padding: 0; max-width: 500px; width: 100%; position: relative; margin: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="padding: 25px; border-bottom: 2px solid #e9ecef; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%); border-radius: 12px 12px 0 0;">
+            <h2 style="margin: 0; color: white; font-size: 1.5rem; font-weight: 700;">➕ Create Admin Account</h2>
+            <button onclick="closeCreateAdminModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">&times;</button>
+        </div>
+        <div style="padding: 30px;">
+            <div id="createAdminError" class="error-message" style="display: none; margin-bottom: 15px;"></div>
+            <div id="createAdminSuccess" style="display: none; background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #28a745;"></div>
+            
+            <form id="createAdminForm" onsubmit="handleCreateAdmin(event); return false;">
+                <div class="filter-group" style="margin-bottom: 20px;">
+                    <label for="createAdminUsername">Username *</label>
+                    <input type="text" id="createAdminUsername" name="username" placeholder="Choose a username" required autocomplete="username" style="width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                
+                <div class="filter-group" style="margin-bottom: 20px;">
+                    <label for="createAdminFullName">Full Name *</label>
+                    <input type="text" id="createAdminFullName" name="fullName" placeholder="Enter full name" required style="width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                
+                <div class="filter-group" style="margin-bottom: 20px;">
+                    <label for="createAdminEmail">Email *</label>
+                    <input type="email" id="createAdminEmail" name="email" placeholder="Enter email address" required autocomplete="email" style="width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                
+                <div class="filter-group" style="margin-bottom: 20px;">
+                    <label for="createAdminPhone">Phone Number *</label>
+                    <input type="tel" id="createAdminPhone" name="phone" placeholder="+63 912 345 6789" required style="width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                
+                <div class="filter-group" style="margin-bottom: 20px;">
+                    <label for="createAdminPassword">Password *</label>
+                    <input type="password" id="createAdminPassword" name="password" placeholder="Create a password (min 6 characters)" required minlength="6" autocomplete="new-password" style="width: 100%; padding: 10px 14px; border: 2px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                    <button type="button" class="btn btn-outline" onclick="closeCreateAdminModal()" style="padding: 10px 20px;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn" style="padding: 10px 20px; background: #6f42c1; color: white; border: none;">
+                        Create Admin Account
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -657,6 +712,121 @@ function logout() {
 document.getElementById('userDetailsModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeUserDetailsModal();
+    }
+});
+
+// Create Admin Account Functions
+function showCreateAdminModal() {
+    document.getElementById('createAdminModal').style.display = 'flex';
+    document.getElementById('createAdminError').style.display = 'none';
+    document.getElementById('createAdminSuccess').style.display = 'none';
+    document.getElementById('createAdminForm').reset();
+}
+
+function closeCreateAdminModal() {
+    document.getElementById('createAdminModal').style.display = 'none';
+    document.getElementById('createAdminError').style.display = 'none';
+    document.getElementById('createAdminSuccess').style.display = 'none';
+    document.getElementById('createAdminForm').reset();
+}
+
+async function handleCreateAdmin(event) {
+    event.preventDefault();
+    
+    const errorDiv = document.getElementById('createAdminError');
+    const successDiv = document.getElementById('createAdminSuccess');
+    const form = document.getElementById('createAdminForm');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    const formData = {
+        username: document.getElementById('createAdminUsername').value.trim(),
+        fullName: document.getElementById('createAdminFullName').value.trim(),
+        email: document.getElementById('createAdminEmail').value.trim(),
+        phone: document.getElementById('createAdminPhone').value.trim(),
+        password: document.getElementById('createAdminPassword').value,
+        role: 'admin'
+    };
+    
+    // Validation
+    if (!formData.username || !formData.fullName || !formData.email || !formData.phone || !formData.password) {
+        errorDiv.textContent = 'Please fill in all required fields';
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        return;
+    }
+    
+    if (formData.password.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters long';
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        return;
+    }
+    
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creating...';
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        errorDiv.textContent = 'Authentication required. Please login again.';
+        errorDiv.style.display = 'block';
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Admin Account';
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/users/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            errorDiv.textContent = data.error || 'Failed to create admin account';
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Create Admin Account';
+            return;
+        }
+        
+        // Success
+        successDiv.textContent = 'Admin account created successfully!';
+        successDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+        form.reset();
+        
+        // Reload users list
+        setTimeout(() => {
+            loadUsers();
+            closeCreateAdminModal();
+        }, 1500);
+        
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Admin Account';
+        
+    } catch (err) {
+        console.error('Create admin error:', err);
+        errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        submitButton.disabled = false;
+        submitButton.textContent = 'Create Admin Account';
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('createAdminModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCreateAdminModal();
     }
 });
 

@@ -31,7 +31,10 @@ def create_app(config_class=Config):
         print("[OK] Database initialized successfully")
     except Exception as e:
         print(f"[ERROR] Database initialization failed: {e}")
-        # Don't raise here - let app start but with limited functionality
+        print("[ERROR] Application cannot start without database connection.")
+        print("[ERROR] Please check your MONGODB_URI in .env file and ensure MongoDB is running.")
+        # Raise the error to prevent app from starting without database
+        raise
     
     # Register blueprints in order (frontend first to avoid prefix conflicts)
     app.register_blueprint(frontend_bp)  # No URL prefix - handles /, /login, /dashboard

@@ -141,18 +141,8 @@
             <span class="admin-badge">Secure Access</span>
         </div>
 
-        <!-- Tab Switcher -->
-        <div style="display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e9ecef;">
-            <button type="button" id="loginTab" onclick="switchTab('login')" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
-                Login
-            </button>
-            <button type="button" id="signupTab" onclick="switchTab('signup')" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 3px solid transparent; color: #6c757d; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
-                Create Admin Account
-            </button>
-        </div>
-
         <!-- Login Form -->
-        <form id="adminLoginForm" novalidate style="display: block;">
+        <form id="adminLoginForm" novalidate>
             <div id="errorMessage" class="error-message" style="display: none;"></div>
 
             <div class="input-group" style="margin-bottom: 20px;">
@@ -180,7 +170,7 @@
             </div>
 
             <button type="submit" class="login-button" id="loginButton">
-                Sign In to Admin Portal
+                Login to Admin Portal
             </button>
 
             <div style="text-align: center; margin-top: 15px;">
@@ -188,87 +178,6 @@
                     Forgot Password?
                 </a>
             </div>
-        </form>
-
-        <!-- Signup Form -->
-        <form id="adminSignupForm" novalidate style="display: none;">
-            <div id="signupErrorMessage" class="error-message" style="display: none;"></div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupUsername">Username *</label>
-                <input
-                    type="text"
-                    id="signupUsername"
-                    name="username"
-                    placeholder="Choose a username"
-                    required
-                    autocomplete="username"
-                />
-            </div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupFullName">Full Name *</label>
-                <input
-                    type="text"
-                    id="signupFullName"
-                    name="fullName"
-                    placeholder="Enter your full name"
-                    required
-                />
-            </div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupEmail">Email *</label>
-                <input
-                    type="email"
-                    id="signupEmail"
-                    name="email"
-                    placeholder="Enter your email"
-                    required
-                    autocomplete="email"
-                />
-            </div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupPhone">Phone Number *</label>
-                <input
-                    type="tel"
-                    id="signupPhone"
-                    name="phone"
-                    placeholder="+63 912 345 6789"
-                    required
-                />
-            </div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupPassword">Password *</label>
-                <input
-                    type="password"
-                    id="signupPassword"
-                    name="password"
-                    placeholder="Create a password (min 6 characters)"
-                    required
-                    minlength="6"
-                    autocomplete="new-password"
-                />
-            </div>
-
-            <div class="input-group" style="margin-bottom: 20px;">
-                <label for="signupConfirmPassword">Confirm Password *</label>
-                <input
-                    type="password"
-                    id="signupConfirmPassword"
-                    name="confirmPassword"
-                    placeholder="Confirm your password"
-                    required
-                    minlength="6"
-                    autocomplete="new-password"
-                />
-            </div>
-
-            <button type="submit" class="login-button" id="signupButton">
-                Create Admin Account
-            </button>
         </form>
 
         <!-- Forgot Password Modal -->
@@ -307,6 +216,115 @@
 
 {% block extra_js %}
 <script>
+// Make functions globally accessible
+function showForgotPassword() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeForgotPassword() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    const errorDiv = document.getElementById('forgotPasswordError');
+    const successDiv = document.getElementById('forgotPasswordSuccess');
+    const form = document.getElementById('forgotPasswordForm');
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
+    if (form) form.reset();
+}
+
+async function handleForgotPassword(event) {
+    event.preventDefault();
+    
+    const errorDiv = document.getElementById('forgotPasswordError');
+    const successDiv = document.getElementById('forgotPasswordSuccess');
+    const submitButton = document.getElementById('forgotPasswordButton');
+    const identifier = document.getElementById('forgotIdentifier');
+    
+    if (!identifier || !identifier.value.trim()) {
+        if (errorDiv) {
+            errorDiv.textContent = 'Please enter your email or username';
+            errorDiv.style.display = 'block';
+        }
+        if (successDiv) successDiv.style.display = 'none';
+        return;
+    }
+
+    const identifierValue = identifier.value.trim();
+
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sending...';
+    }
+
+    try {
+        const response = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                identifier: identifierValue,
+                role: 'admin'  // Specify admin role for password reset
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            if (errorDiv) {
+                errorDiv.textContent = data.error || 'Failed to send reset instructions';
+                errorDiv.style.display = 'block';
+            }
+            if (successDiv) successDiv.style.display = 'none';
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Reset Instructions';
+            }
+            return;
+        }
+
+        if (successDiv) {
+            successDiv.style.display = 'block';
+            successDiv.textContent = 'Password reset instructions have been sent! Check your email or the console for the verification code.';
+        }
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Send Reset Instructions';
+        }
+        
+        // Show verification code if provided (for dev mode)
+        if (data.verification_code) {
+            console.log('Verification Code:', data.verification_code);
+            if (successDiv) {
+                successDiv.innerHTML = `Password reset instructions sent!<br><strong>Verification Code: ${data.verification_code}</strong><br>(Email/SMS not configured - check console)`;
+            }
+        }
+        
+        // Auto-close after 5 seconds
+        setTimeout(() => {
+            closeForgotPassword();
+        }, 5000);
+
+    } catch (err) {
+        console.error('Forgot password error:', err);
+        if (errorDiv) {
+            errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
+            errorDiv.style.display = 'block';
+        }
+        if (successDiv) successDiv.style.display = 'none';
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Send Reset Instructions';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const adminLoginForm = document.getElementById('adminLoginForm');
     if (!adminLoginForm) {
@@ -354,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorDiv.textContent = 'Server error: Invalid response format';
                 errorDiv.style.display = 'block';
                 loginButton.disabled = false;
-                loginButton.textContent = 'Sign In to Admin Portal';
+                loginButton.textContent = 'Login to Admin Portal';
                 return;
             }
 
@@ -362,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorDiv.textContent = data.error || 'Login failed. Please check your credentials.';
                 errorDiv.style.display = 'block';
                 loginButton.disabled = false;
-                loginButton.textContent = 'Sign In to Admin Portal';
+                loginButton.textContent = 'Login to Admin Portal';
                 return;
             }
 
@@ -371,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorDiv.textContent = 'Access denied. This account does not have admin privileges.';
                 errorDiv.style.display = 'block';
                 loginButton.disabled = false;
-                loginButton.textContent = 'Sign In to Admin Portal';
+                loginButton.textContent = 'Login to Admin Portal';
                 return;
             }
 
@@ -386,194 +404,16 @@ document.addEventListener('DOMContentLoaded', function() {
             errorDiv.textContent = 'Network error: ' + (err.message || 'Please check your connection and try again');
             errorDiv.style.display = 'block';
             loginButton.disabled = false;
-            loginButton.textContent = 'Sign In to Admin Portal';
+            loginButton.textContent = 'Login to Admin Portal';
         }
     });
-
-    function showForgotPassword() {
-        document.getElementById('forgotPasswordModal').style.display = 'flex';
-    }
-
-    function closeForgotPassword() {
-        document.getElementById('forgotPasswordModal').style.display = 'none';
-        document.getElementById('forgotPasswordError').style.display = 'none';
-        document.getElementById('forgotPasswordSuccess').style.display = 'none';
-        document.getElementById('forgotPasswordForm').reset();
-    }
-
-    async function handleForgotPassword(event) {
-        event.preventDefault();
-        
-        const errorDiv = document.getElementById('forgotPasswordError');
-        const successDiv = document.getElementById('forgotPasswordSuccess');
-        const submitButton = document.getElementById('forgotPasswordButton');
-        const identifier = document.getElementById('forgotIdentifier').value.trim();
-
-        if (!identifier) {
-            errorDiv.textContent = 'Please enter your email or username';
-            errorDiv.style.display = 'block';
-            successDiv.style.display = 'none';
-            return;
-        }
-
-        errorDiv.style.display = 'none';
-        successDiv.style.display = 'none';
-        submitButton.disabled = true;
-        submitButton.textContent = 'Sending...';
-
-        try {
-            const response = await fetch('/api/auth/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    identifier: identifier,
-                    role: 'admin'  // Specify admin role for password reset
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                errorDiv.textContent = data.error || 'Failed to send reset instructions';
-                errorDiv.style.display = 'block';
-                successDiv.style.display = 'none';
-                submitButton.disabled = false;
-                submitButton.textContent = 'Send Reset Instructions';
-                return;
-            }
-
-            successDiv.style.display = 'block';
-            errorDiv.style.display = 'none';
-            submitButton.disabled = false;
-            submitButton.textContent = 'Send Reset Instructions';
-            
-            // Auto-close after 3 seconds
-            setTimeout(() => {
-                closeForgotPassword();
-            }, 3000);
-
-        } catch (err) {
-            console.error('Forgot password error:', err);
-            errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
-            errorDiv.style.display = 'block';
-            successDiv.style.display = 'none';
-            submitButton.disabled = false;
-            submitButton.textContent = 'Send Reset Instructions';
-        }
-    }
 
     // Close modal when clicking outside
-    document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeForgotPassword();
-        }
-    });
-
-    // Tab switching
-    function switchTab(tab) {
-        const loginForm = document.getElementById('adminLoginForm');
-        const signupForm = document.getElementById('adminSignupForm');
-        const loginTab = document.getElementById('loginTab');
-        const signupTab = document.getElementById('signupTab');
-
-        if (tab === 'login') {
-            loginForm.style.display = 'block';
-            signupForm.style.display = 'none';
-            loginTab.style.borderBottomColor = '#667eea';
-            loginTab.style.color = '#667eea';
-            signupTab.style.borderBottomColor = 'transparent';
-            signupTab.style.color = '#6c757d';
-        } else {
-            loginForm.style.display = 'none';
-            signupForm.style.display = 'block';
-            signupTab.style.borderBottomColor = '#667eea';
-            signupTab.style.color = '#667eea';
-            loginTab.style.borderBottomColor = 'transparent';
-            loginTab.style.color = '#6c757d';
-        }
-    }
-
-    // Signup form handler
-    const adminSignupForm = document.getElementById('adminSignupForm');
-    if (adminSignupForm) {
-        adminSignupForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const errorDiv = document.getElementById('signupErrorMessage');
-            const signupButton = document.getElementById('signupButton');
-            
-            const formData = {
-                username: document.getElementById('signupUsername').value.trim(),
-                fullName: document.getElementById('signupFullName').value.trim(),
-                email: document.getElementById('signupEmail').value.trim(),
-                phone: document.getElementById('signupPhone').value.trim(),
-                password: document.getElementById('signupPassword').value,
-                confirmPassword: document.getElementById('signupConfirmPassword').value,
-                role: 'admin'
-            };
-
-            // Validation
-            if (!formData.username || !formData.fullName || !formData.email || !formData.phone || !formData.password) {
-                errorDiv.textContent = 'Please fill in all required fields';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (formData.password !== formData.confirmPassword) {
-                errorDiv.textContent = 'Passwords do not match';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            if (formData.password.length < 6) {
-                errorDiv.textContent = 'Password must be at least 6 characters long';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            errorDiv.style.display = 'none';
-            signupButton.disabled = true;
-            signupButton.textContent = 'Creating Account...';
-
-            try {
-                const response = await fetch('/api/auth/admin/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        username: formData.username,
-                        fullName: formData.fullName,
-                        email: formData.email,
-                        phone: formData.phone,
-                        password: formData.password
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    errorDiv.textContent = data.error || 'Failed to create admin account';
-                    errorDiv.style.display = 'block';
-                    signupButton.disabled = false;
-                    signupButton.textContent = 'Create Admin Account';
-                    return;
-                }
-
-                // Success - show message and switch to login
-                errorDiv.style.display = 'none';
-                alert('Admin account created successfully! Please login with your credentials.');
-                adminSignupForm.reset();
-                switchTab('login');
-                document.getElementById('username').value = formData.username;
-                signupButton.disabled = false;
-                signupButton.textContent = 'Create Admin Account';
-
-            } catch (err) {
-                console.error('Signup error:', err);
-                errorDiv.textContent = 'Network error: ' + (err.message || 'Please try again');
-                errorDiv.style.display = 'block';
-                signupButton.disabled = false;
-                signupButton.textContent = 'Create Admin Account';
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    if (forgotPasswordModal) {
+        forgotPasswordModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeForgotPassword();
             }
         });
     }

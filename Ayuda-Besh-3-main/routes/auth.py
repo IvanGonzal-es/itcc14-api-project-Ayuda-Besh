@@ -4,7 +4,8 @@ from flask import Blueprint, request, jsonify, make_response
 from lib.mongodb import get_database
 from lib.auth import (
     verify_password, generate_token, hash_password,
-    generate_verification_code, generate_reset_token, verify_reset_token
+    generate_verification_code, generate_reset_token, verify_reset_token,
+    verify_token
 )
 from lib.email_service import send_verification_email, send_sms_verification
 from datetime import datetime, timedelta
@@ -87,8 +88,9 @@ def login():
 
 @auth_bp.route('/admin/signup', methods=['POST'])
 def admin_signup():
-    """Admin signup endpoint - public endpoint for creating admin accounts from Admin Portal"""
+    """Admin signup endpoint - allows first admin creation, requires admin auth for subsequent admins"""
     try:
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Request body must be valid JSON'}), 400
@@ -110,6 +112,30 @@ def admin_signup():
         
         db = get_database()
         users_collection = db['users']
+        
+        # SECURITY: Check if any admins exist
+        existing_admin_count = users_collection.count_documents({'role': 'admin'})
+        
+        # If admins exist, require authentication
+        if existing_admin_count > 0:
+            # Verify admin authentication
+            token = None
+            if 'Authorization' in request.headers:
+                auth_header = request.headers['Authorization']
+                if auth_header.startswith('Bearer '):
+                    token = auth_header.split(" ")[1]
+            if not token:
+                token = request.cookies.get('token')
+            
+            if not token:
+                return jsonify({'error': 'Admin authentication required. Please login as an admin first.'}), 401
+            
+            payload = verify_token(token)
+            if not payload:
+                return jsonify({'error': 'Invalid or expired token'}), 401
+            
+            if payload.get('role') != 'admin':
+                return jsonify({'error': 'Admin access required to create admin accounts'}), 403
         
         # Check for duplicates
         if users_collection.find_one({'username': username}):
@@ -141,6 +167,8 @@ def admin_signup():
             'email': email,
             'role': role
         }
+        
+        print(f"[OK] ADMIN ACCOUNT CREATED: {username} (first admin: {existing_admin_count == 0})")
         
         return jsonify({
             'message': 'Admin account created successfully',
@@ -281,6 +309,10 @@ def forgot_password():
         
         identifier = data.get('identifier', '').strip()
         role = data.get('role', 'customer')
+        
+        # Validate role - allow customer, provider, or admin
+        if role not in ['customer', 'provider', 'admin']:
+            return jsonify({'error': 'Invalid role. Must be customer, provider, or admin'}), 400
         
         if not identifier:
             return jsonify({'error': 'Email or phone number is required'}), 400
