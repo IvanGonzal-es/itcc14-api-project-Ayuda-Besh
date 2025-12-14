@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - AyudaBesh{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="signup-desktop">
+    <div class="signup-container">
+        <form class="signup-form" id="signupForm" novalidate>
+            <h2>Create Your Account</h2>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <div class="input-group">
+                <label for="username" id="usernameLabel">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    required
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="fullName" id="fullNameLabel">Full Name</label>
+                <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    placeholder="Your full name"
+                    required
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email <span style="color: red;">*</span></label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Your email"
+                    required
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="phone">Phone Number <span style="color: red;">*</span></label>
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="+63 912 345 6789"
+                    required
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    required
+                />
+            </div>
+
+            <div class="input-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm your password"
+                    required
+                />
+            </div>
+
+            <div class="role-selector">
+                <label>
+                    <input type="radio" name="role" value="customer" checked onchange="toggleProviderFields()"> Customer
+                </label>
+                <label>
+                    <input type="radio" name="role" value="provider" onchange="toggleProviderFields()"> Provider
+                </label>
+                <label>
+                    <input type="radio" name="role" value="admin" onchange="toggleProviderFields()"> Admin
+                </label>
+            </div>
+
+            <!-- Provider-specific fields -->
+            <div id="providerFields" style="display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <h3 style="margin-top: 0; margin-bottom: 15px;">Service Provider Information</h3>
+                
+                <div class="input-group">
+                    <label for="location">Service Location <span style="color: red;">*</span></label>
+                    <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        placeholder="e.g., Manila, Quezon City"
+                        required
+                    />
+                </div>
+
+                <div class="input-group">
+                    <label>Services You Offer <span style="color: red;">*</span></label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 20px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="cleaning" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Domestic Cleaning
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="plumbing" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Plumbing
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="electrical" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Electrical Work
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="pest_control" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Pest Control
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="appliance" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Appliance Installation
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="maintenance" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> General Maintenance
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal; margin: 0;">
+                            <input type="checkbox" name="services" value="online_services" style="margin-right: 8px; width: 18px; height: 18px; flex-shrink: 0;"> Online Services
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="hourlyRate">Hourly Rate (₱) <span style="color: red;">*</span></label>
+                    <input
+                        type="number"
+                        id="hourlyRate"
+                        name="hourlyRate"
+                        placeholder="e.g., 500"
+                        min="0"
+                        required
+                    />
+                </div>
+
+                <div class="input-group">
+                    <label for="description">Service Description <span style="color: red;">*</span></label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        placeholder="Tell us about your services, experience, and what makes you unique..."
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="serviceRadius">Service Radius (km)</label>
+                    <input
+                        type="number"
+                        id="serviceRadius"
+                        name="serviceRadius"
+                        placeholder="e.g., 10"
+                        min="0"
+                    />
+                </div>
+
+                <div class="input-group">
+                    <label for="equipment">Equipment/Tools Available</label>
+                    <input
+                        type="text"
+                        id="equipment"
+                        name="equipment"
+                        placeholder="e.g., Power tools, Cleaning supplies, etc."
+                    />
+                </div>
+            </div>
+
+            <button type="submit" class="signup-button" id="signupButton">Sign Up</button>
+
+            <div class="signup-links">
+                Already have an account? <a href="{{ url_for('frontend.login') }}">Log in</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleProviderFields() {
+    const role = document.querySelector('input[name="role"]:checked').value;
+    const providerFields = document.getElementById('providerFields');
+    const providerInputs = providerFields.querySelectorAll('input[required], textarea[required]');
+    const usernameLabel = document.getElementById('usernameLabel');
+    const usernameInput = document.getElementById('username');
+    const fullNameLabel = document.getElementById('fullNameLabel');
+    const fullNameInput = document.getElementById('fullName');
+    
+    if (role === 'provider') {
+        providerFields.style.display = 'block';
+        providerInputs.forEach(input => input.required = true);
+        // Change labels and placeholders for provider
+        usernameLabel.textContent = 'Company Name';
+        usernameInput.placeholder = 'Enter your company name';
+        fullNameLabel.textContent = 'Owner Full Name';
+        fullNameInput.placeholder = 'Enter the owner\'s full name';
+    } else {
+        providerFields.style.display = 'none';
+        providerInputs.forEach(input => input.required = false);
+        // Reset labels and placeholders for customer
+        usernameLabel.textContent = 'Username';
+        usernameInput.placeholder = 'Choose a username';
+        fullNameLabel.textContent = 'Full Name';
+        fullNameInput.placeholder = 'Your full name';
+    }
+}
+
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    const signupForm = document.getElementById('signupForm');
+    if (!signupForm) {
+        console.error('Signup form not found');
+        return;
+    }
+
+    signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const errorDiv = document.getElementById('errorMessage');
+        const signupButton = document.getElementById('signupButton');
+        
+        if (!errorDiv || !signupButton) {
+            console.error('Required form elements not found');
+            return;
+        }
+        
+        const roleRadio = document.querySelector('input[name="role"]:checked');
+        if (!roleRadio) {
+            errorDiv.textContent = 'Please select a role';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        const role = roleRadio.value;
+        
+        const formData = {
+            username: document.getElementById('username').value,
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            password: document.getElementById('password').value,
+            confirmPassword: document.getElementById('confirmPassword').value,
+            role: role
+        };
+
+        // Add provider-specific fields if role is provider
+        if (role === 'provider') {
+            const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value);
+            
+            if (selectedServices.length === 0) {
+                errorDiv.textContent = "Please select at least one service you offer";
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            formData.services_offered = selectedServices;
+            formData.location = document.getElementById('location').value;
+            formData.hourly_rate = parseInt(document.getElementById('hourlyRate').value) || 0;
+            formData.description = document.getElementById('description').value;
+            formData.service_radius = parseInt(document.getElementById('serviceRadius').value) || 0;
+            formData.equipment = document.getElementById('equipment').value || '';
+        }
+
+        // Reset error and disable button
+        errorDiv.style.display = 'none';
+        signupButton.disabled = true;
+        signupButton.textContent = 'Creating account...';
+
+        if (formData.password !== formData.confirmPassword) {
+            errorDiv.textContent = "Passwords do not match";
+            errorDiv.style.display = 'block';
+            signupButton.disabled = false;
+            signupButton.textContent = 'Sign Up';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Failed to parse response as JSON:', jsonError);
+                const text = await response.text();
+                console.error('Response text:', text);
+                errorDiv.textContent = 'Server error: Invalid response format';
+                errorDiv.style.display = 'block';
+                signupButton.disabled = false;
+                signupButton.textContent = 'Sign Up';
+                return;
+            }
+
+            if (!response.ok) {
+                errorDiv.textContent = data.error || 'Signup failed';
+                errorDiv.style.display = 'block';
+                signupButton.disabled = false;
+                signupButton.textContent = 'Sign Up';
+                return;
+            }
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+
+            // Redirect based on role
+            let redirectUrl = '/customer/dashboard';
+            if (formData.role === 'provider') {
+                redirectUrl = '/provider/dashboard';
+            } else if (formData.role === 'admin') {
+                redirectUrl = '/admin/dashboard';
+            }
+            window.location.href = redirectUrl;
+
+        } catch (err) {
+            console.error('Signup error:', err);
+            errorDiv.textContent = 'An error occurred during signup: ' + (err.message || 'Please try again');
+            errorDiv.style.display = 'block';
+            signupButton.disabled = false;
+            signupButton.textContent = 'Sign Up';
+        }
+    });
+});
+</script>
+{% endblock %}
