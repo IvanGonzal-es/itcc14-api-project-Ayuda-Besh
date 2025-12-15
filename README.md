@@ -3,7 +3,7 @@
 ## Team Members
 - [Ivan Gonzales](https://github.com/IvanGonzal-es) – Group Leader / Backend Developer  
 - [Jesmund Libar](https://github.com/jesmundlibar) – Frontend  Developer  
-- [Mayeoh Barangot](https://github.com/May-Bars) – Backend/ Documentation
+- [Mayeoh Barangot](https://github.com/May-Bars) – Documentation
 - [Clarice Pabillaran](https://github.com/Clarice-Pabillaran) - Backend Developer
 ---
 
